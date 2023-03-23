@@ -29,9 +29,9 @@ use crate::{b2i, from_raw, to_raw};
 use std::cmp::min;
 use std::fmt::{Debug, Formatter};
 
-const O_RDONLY: c_int = 0;
-const O_WRONLY: c_int = 1;
-const O_APPEND: c_int = 1024;
+const O_RDONLY: c_int = libc::O_RDONLY;
+const O_WRONLY: c_int = libc::O_WRONLY;
+const O_APPEND: c_int = libc::O_WRONLY | libc::O_APPEND;
 
 /// Options for zero-copy read
 pub struct RzOptions {
@@ -403,10 +403,10 @@ impl HdfsFs {
     pub fn capacity(&self) -> Result<usize, HdfsErr> {
         let block_sz = unsafe { hdfsGetCapacity(self.raw) };
 
-        if block_sz > 0 {
-            Ok(block_sz as usize)
-        } else {
+        if block_sz < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(block_sz as usize)
         }
     }
 
@@ -502,10 +502,10 @@ impl HdfsFs {
     pub fn used(&self) -> Result<usize, HdfsErr> {
         let block_sz = unsafe { hdfsGetUsed(self.raw) };
 
-        if block_sz > 0 {
-            Ok(block_sz as usize)
-        } else {
+        if block_sz < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(block_sz as usize)
         }
     }
 
@@ -629,10 +629,10 @@ impl<'a> HdfsFile<'a> {
     pub fn pos(&self) -> Result<u64, HdfsErr> {
         let pos = unsafe { hdfsTell(self.fs.raw, self.file) };
 
-        if pos > 0 {
-            Ok(pos as u64)
-        } else {
+        if pos < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(pos as u64)
         }
     }
 
@@ -647,10 +647,10 @@ impl<'a> HdfsFile<'a> {
             )
         };
 
-        if read_len > 0 {
-            Ok(read_len as i32)
-        } else {
+        if read_len < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(read_len as i32)
         }
     }
 
@@ -666,10 +666,10 @@ impl<'a> HdfsFile<'a> {
             )
         };
 
-        if read_len > 0 {
-            Ok(read_len as i32)
-        } else {
+        if read_len < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(read_len as i32)
         }
     }
 
@@ -685,10 +685,10 @@ impl<'a> HdfsFile<'a> {
             )
         };
 
-        if read_len > 0 {
-            Ok(read_len as i32)
-        } else {
+        if read_len < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(read_len as i32)
         }
     }
 
@@ -710,10 +710,10 @@ impl<'a> HdfsFile<'a> {
             )
         };
 
-        if read_len > 0 {
-            Ok(read_len as i32)
-        } else {
+        if read_len < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(read_len as i32)
         }
     }
 
@@ -749,10 +749,10 @@ impl<'a> HdfsFile<'a> {
             )
         };
 
-        if written_len > 0 {
-            Ok(written_len)
-        } else {
+        if written_len < 0 {
             Err(HdfsErr::Unknown)
+        } else {
+            Ok(written_len)
         }
     }
 }
