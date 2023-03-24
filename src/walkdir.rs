@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::err::HdfsErr;
 
 use crate::tree_iter::{IterOptions, TreeIter, TreeManager};
-use crate::{FileStatus, HdfsFs};
+use crate::{FileStatus, HdfsFs, HdfsRegistry};
 
 pub mod tree_iter {}
 
@@ -15,10 +15,10 @@ pub struct HdfsWalkDir {
 }
 
 impl HdfsWalkDir {
-    pub fn new(root: String, hdfs: Arc<HdfsFs>) -> Result<Self, HdfsErr> {
-        //let hdfs = hdfs::get_hdfs_by_full_path(&root)?;
+    pub fn new(root: String, hdfs_registry: &HdfsRegistry) -> Result<Self, HdfsErr> {
+        let hdfs = hdfs_registry.get(&root)?;
 
-        Ok(Self::new_with_hdfs(root, hdfs))
+        Ok(Self::new_with_hdfs(root, Arc::new(hdfs)))
     }
 
     pub fn new_with_hdfs(root: String, hdfs: Arc<HdfsFs>) -> Self {
@@ -64,8 +64,8 @@ impl HdfsWalkDir {
 }
 
 // impl IntoIterator for HdfsWalkDir {
-//     type Item<'a> = Result<FileStatus<'a>, HdfsErr>;
-//     type IntoIter<'a> = TreeIter<String, FileStatus<'a>, HdfsErr>;
+//     type Item = Result<FileStatus, HdfsErr>;
+//     type IntoIter = TreeIter<String, FileStatus, HdfsErr>;
 
 //     fn into_iter(self) -> TreeIter<String, FileStatus, HdfsErr> {
 //         TreeIter::new(
