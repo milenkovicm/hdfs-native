@@ -76,13 +76,14 @@ impl<V, N, E> TreeIter<V, N, E> {
                         layer: prev_node.layer + 1,
                     }));
             } else {
-                let result : Vec<TreeNode<N>> = children
+                let result: Vec<TreeNode<N>> = children
                     .into_iter()
                     .filter(|node| !self.manager.is_leaf(node))
                     .map(|node| TreeNode {
                         node,
                         layer: prev_node.layer + 1,
-                    }).collect();
+                    })
+                    .collect();
 
                 self.deferred_nodes.extend(result);
             }

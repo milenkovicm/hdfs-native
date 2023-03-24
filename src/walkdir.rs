@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::err::HdfsErr;
 
 use crate::tree_iter::{IterOptions, TreeIter, TreeManager};
-use crate::{FileStatus, HdfsFs, HdfsRegistry};
+use crate::{FileStatus, HdfsFs};
 
 pub mod tree_iter {}
 
@@ -15,11 +15,11 @@ pub struct HdfsWalkDir {
 }
 
 impl HdfsWalkDir {
-    pub fn new(root: String, hdfs_registry: &HdfsRegistry) -> Result<Self, HdfsErr> {
-        let hdfs = hdfs_registry.get(&root)?;
+    // pub fn new(root: String, hdfs_registry: &HdfsRegistry) -> Result<Self, HdfsErr> {
+    //     let hdfs = hdfs_registry.get(&root)?;
 
-        Ok(Self::new_with_hdfs(root, Arc::new(hdfs)))
-    }
+    //     Ok(Self::new_with_hdfs(root, Arc::new(hdfs)))
+    // }
 
     pub fn new_with_hdfs(root: String, hdfs: Arc<HdfsFs>) -> Self {
         Self {
@@ -63,38 +63,38 @@ impl HdfsWalkDir {
     }
 }
 
-// impl IntoIterator for HdfsWalkDir {
-//     type Item = Result<FileStatus, HdfsErr>;
-//     type IntoIter = TreeIter<String, FileStatus, HdfsErr>;
+impl IntoIterator for HdfsWalkDir {
+    type Item = Result<FileStatus, HdfsErr>;
+    type IntoIter = TreeIter<String, FileStatus, HdfsErr>;
 
-//     fn into_iter(self) -> TreeIter<String, FileStatus, HdfsErr> {
-//         TreeIter::new(
-//             Box::new(HdfsTreeManager {
-//                 hdfs: self.hdfs.clone(),
-//             }),
-//             self.opts,
-//             self.root,
-//         )
-//     }
-// }
+    fn into_iter(self) -> TreeIter<String, FileStatus, HdfsErr> {
+        TreeIter::new(
+            Box::new(HdfsTreeManager {
+                hdfs: self.hdfs.clone(),
+            }),
+            self.opts,
+            self.root,
+        )
+    }
+}
 
 struct HdfsTreeManager {
     hdfs: Arc<HdfsFs>,
 }
 
-// impl TreeManager<String, FileStatus, HdfsErr> for HdfsTreeManager {
-//     fn to_value(&self, v: String) -> Result<FileStatus, HdfsErr> {
-//         self.hdfs.get_file_status(&v)
-//     }
+impl TreeManager<String, FileStatus, HdfsErr> for HdfsTreeManager {
+    fn to_value(&self, v: String) -> Result<FileStatus, HdfsErr> {
+        self.hdfs.get_file_status(&v)
+    }
 
-//     fn get_children(&self, n: &FileStatus) -> Result<Vec<FileStatus>, HdfsErr> {
-//         self.hdfs.list_status(n.name())
-//     }
+    fn get_children(&self, n: &FileStatus) -> Result<Vec<FileStatus>, HdfsErr> {
+        self.hdfs.list_status(n.name())
+    }
 
-//     fn is_leaf(&self, n: &FileStatus) -> bool {
-//         n.is_file()
-//     }
-// }
+    fn is_leaf(&self, n: &FileStatus) -> bool {
+        n.is_file()
+    }
+}
 
 #[cfg(test)]
 mod test {

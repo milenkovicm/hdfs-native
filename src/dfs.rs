@@ -156,16 +156,16 @@ impl HdfsFileInfoPtr {
 }
 
 /// Interface that represents the client side information for a file or directory.
-pub struct FileStatus<'fs> {
+pub struct FileStatus {
     raw: Arc<HdfsFileInfoPtr>,
     idx: u32,
-    _marker: PhantomData<&'fs HdfsFs>,
+    _marker: PhantomData<()>,
 }
 
-impl<'fs> FileStatus<'fs> {
+impl FileStatus {
     #[inline]
     /// create FileStatus from *const hdfsFileInfo
-    fn new(ptr: *const hdfsFileInfo) -> FileStatus<'fs> {
+    fn new(ptr: *const hdfsFileInfo) -> FileStatus {
         FileStatus {
             raw: Arc::new(HdfsFileInfoPtr::new(ptr)),
             idx: 0,
@@ -176,7 +176,7 @@ impl<'fs> FileStatus<'fs> {
     /// create FileStatus from *const hdfsFileInfo which points
     /// to dynamically allocated array.
     #[inline]
-    fn from_array(raw: Arc<HdfsFileInfoPtr>, idx: u32) -> FileStatus<'fs> {
+    fn from_array(raw: Arc<HdfsFileInfoPtr>, idx: u32) -> FileStatus {
         FileStatus {
             raw,
             idx,
@@ -191,7 +191,7 @@ impl<'fs> FileStatus<'fs> {
 
     /// Get the name of the file
     #[inline]
-    pub fn name(&self) -> &'fs str {
+    pub fn name(&self) -> &str {
         from_raw!((*self.ptr()).mName)
     }
 
@@ -215,13 +215,13 @@ impl<'fs> FileStatus<'fs> {
 
     /// Get the owner of the file
     #[inline]
-    pub fn owner(&self) -> &'fs str {
+    pub fn owner(&self) -> &str {
         from_raw!((*self.ptr()).mOwner)
     }
 
     /// Get the group associated with the file
     #[inline]
-    pub fn group(&self) -> &'fs str {
+    pub fn group(&self) -> &str {
         from_raw!((*self.ptr()).mGroup)
     }
 
