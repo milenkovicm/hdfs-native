@@ -637,7 +637,7 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Read data from an open file.
-    pub fn read(&self, buf: &mut [u8]) -> Result<i32, HdfsErr> {
+    pub fn read(&self, buf: &mut [u8]) -> Result<usize, HdfsErr> {
         let read_len = unsafe {
             hdfsRead(
                 self.fs.raw,
@@ -650,12 +650,12 @@ impl<'a> HdfsFile<'a> {
         if read_len < 0 {
             Err(HdfsErr::Unknown)
         } else {
-            Ok(read_len as i32)
+            Ok(read_len as usize)
         }
     }
 
     /// Positional read of data from an open file.
-    pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<i32, HdfsErr> {
+    pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<usize, HdfsErr> {
         let read_len = unsafe {
             hdfsPread(
                 self.fs.raw,
@@ -669,12 +669,12 @@ impl<'a> HdfsFile<'a> {
         if read_len < 0 {
             Err(HdfsErr::Unknown)
         } else {
-            Ok(read_len as i32)
+            Ok(read_len as usize)
         }
     }
 
     /// Read data from an open file.
-    pub fn read_length(&self, buf: &mut [u8], length: usize) -> Result<i32, HdfsErr> {
+    pub fn read_length(&self, buf: &mut [u8], length: usize) -> Result<usize, HdfsErr> {
         let required_len = min(length, buf.len());
         let read_len = unsafe {
             hdfsRead(
@@ -688,7 +688,7 @@ impl<'a> HdfsFile<'a> {
         if read_len < 0 {
             Err(HdfsErr::Unknown)
         } else {
-            Ok(read_len as i32)
+            Ok(read_len as usize)
         }
     }
 
@@ -698,7 +698,7 @@ impl<'a> HdfsFile<'a> {
         pos: i64,
         buf: &mut [u8],
         length: usize,
-    ) -> Result<i32, HdfsErr> {
+    ) -> Result<usize, HdfsErr> {
         let required_len = min(length, buf.len());
         let read_len = unsafe {
             hdfsPread(
@@ -713,7 +713,7 @@ impl<'a> HdfsFile<'a> {
         if read_len < 0 {
             Err(HdfsErr::Unknown)
         } else {
-            Ok(read_len as i32)
+            Ok(read_len as usize)
         }
     }
 
@@ -739,7 +739,7 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Write data into an open file.
-    pub fn write(&self, buf: &[u8]) -> Result<i32, HdfsErr> {
+    pub fn write(&self, buf: &[u8]) -> Result<usize, HdfsErr> {
         let written_len = unsafe {
             hdfsWrite(
                 self.fs.raw,
@@ -752,7 +752,7 @@ impl<'a> HdfsFile<'a> {
         if written_len < 0 {
             Err(HdfsErr::Unknown)
         } else {
-            Ok(written_len)
+            Ok(written_len as usize)
         }
     }
 }
