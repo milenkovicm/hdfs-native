@@ -139,6 +139,14 @@ struct HdfsFileInfoPtr {
     pub len: i32,
 }
 
+//
+// TODO: I'm not sure about this part, fingers crossed it will be ok
+// https://stackoverflow.com/questions/50258359/can-a-struct-containing-a-raw-pointer-implement-send-and-be-ffi-safe
+//
+
+unsafe impl Send for HdfsFileInfoPtr {}
+unsafe impl Sync for HdfsFileInfoPtr {}
+
 impl<'a> Drop for HdfsFileInfoPtr {
     fn drop(&mut self) {
         unsafe { hdfsFreeFileInfo(self.ptr, self.len) };
@@ -755,4 +763,16 @@ impl<'a> HdfsFile<'a> {
             Ok(written_len as usize)
         }
     }
+    // consider adding it
+
+    // pub fn get_file_status(&self) -> Result<FileStatus, HdfsErr> {
+    //     if self.ptr().is_null() {
+    //         Err(HdfsErr::Unknown)
+    //     } else {
+    //         Ok(FileStatus::new(self.ptr().clone()))
+    //     }
+    // }
 }
+
+#[cfg(test)]
+mod test {}
