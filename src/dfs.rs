@@ -34,7 +34,8 @@ const O_WRONLY: c_int = libc::O_WRONLY;
 const O_APPEND: c_int = libc::O_WRONLY | libc::O_APPEND;
 
 /// Options for zero-copy read
-pub struct RzOptions {
+// removed pub visibility as it does not look like library supports it
+struct RzOptions {
     ptr: *const hadoopRzOptions,
 }
 
@@ -50,6 +51,8 @@ impl Default for RzOptions {
     }
 }
 
+// removed pub visibility as it does not look like library supports it
+#[allow(dead_code)]
 impl RzOptions {
     pub fn new() -> RzOptions {
         RzOptions {
@@ -397,15 +400,15 @@ impl HdfsFs {
     }
 
     /// Get the default blocksize at the filesystem indicated by a given path.
-    pub fn block_size(&self, path: &str) -> Result<usize, HdfsErr> {
-        let block_sz = unsafe { hdfsGetDefaultBlockSizeAtPath(self.raw, to_raw!(path)) };
+    // pub fn block_size(&self, path: &str) -> Result<usize, HdfsErr> {
+    //     let block_sz = unsafe { hdfsGetDefaultBlockSizeAtPath(self.raw, to_raw!(path)) };
 
-        if block_sz > 0 {
-            Ok(block_sz as usize)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
+    //     if block_sz > 0 {
+    //         Ok(block_sz as usize)
+    //     } else {
+    //         Err(HdfsErr::Unknown)
+    //     }
+    // }
 
     /// Return the raw capacity of the filesystem.
     pub fn capacity(&self) -> Result<usize, HdfsErr> {
@@ -614,9 +617,9 @@ impl<'a> HdfsFile<'a> {
     /// Similar to posix fsync, Flush out the data in client's
     /// user buffer. all the way to the disk device (but the disk may have
     /// it in its cache).
-    pub fn hsync(&self) -> bool {
-        (unsafe { hdfsHSync(self.fs.raw, self.file) }) == 0
-    }
+    // pub fn hsync(&self) -> bool {
+    //     (unsafe { hdfsHSync(self.fs.raw, self.file) }) == 0
+    // }
 
     /// Determine if a file is open for read.
     pub fn is_readable(&self) -> bool {
@@ -729,10 +732,12 @@ impl<'a> HdfsFile<'a> {
             Ok(read_len as usize)
         }
     }
-
+    // removed pub visibility as it does not support it at the moment
+    //
     /// Perform a byte buffer read. If possible, this will be a zero-copy
     /// (mmap) read.
-    pub fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
+    #[allow(dead_code)]
+    fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
         let buf: *const hadoopRzBuffer =
             unsafe { hadoopReadZero(self.file, opts.ptr, max_len as i32) };
 

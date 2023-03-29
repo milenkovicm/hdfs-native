@@ -107,39 +107,39 @@ extern "C" {
     /// Return 1 if the file is open for write; 0 otherwise.
     pub fn hdfsFileIsOpenForWrite(file: *const hdfsFile) -> c_int;
 
-    /// Get read statistics about a file.  This is only applicable to files
-    /// opened for reading.
-    ///
-    /// #### Params
-    /// * ```file``` - The HDFS file
-    /// * ```stats``` - (out parameter) on a successful return, the read statistics.  
-    /// Unchanged otherwise. You must free the returned statistics with
-    /// hdfsFileFreeReadStatistics.
-    ///
-    /// #### Return
-    /// * 0 if the statistics were successfully returned,
-    /// * -1 otherwise.  On a failure, please check errno against
-    /// * ENOTSUP. webhdfs, LocalFilesystem, and so forth may
-    /// not support read statistics.
-    pub fn hdfsFileGetReadStatistics(
-        file: *const hdfsFile,
-        stats: &mut *mut hdfsReadStatistics,
-    ) -> c_int;
+    // /// Get read statistics about a file.  This is only applicable to files
+    // /// opened for reading.
+    // ///
+    // /// #### Params
+    // /// * ```file``` - The HDFS file
+    // /// * ```stats``` - (out parameter) on a successful return, the read statistics.
+    // /// Unchanged otherwise. You must free the returned statistics with
+    // /// hdfsFileFreeReadStatistics.
+    // ///
+    // /// #### Return
+    // /// * 0 if the statistics were successfully returned,
+    // /// * -1 otherwise.  On a failure, please check errno against
+    // /// * ENOTSUP. webhdfs, LocalFilesystem, and so forth may
+    // /// not support read statistics.
+    // pub fn hdfsFileGetReadStatistics(
+    //     file: *const hdfsFile,
+    //     stats: &mut *mut hdfsReadStatistics,
+    // ) -> c_int;
 
-    /// HDFS read statistics for a file,
-    ///
-    /// #### Params
-    /// * ```stats``` - HDFS read statistics for a file.
-    ///
-    /// #### Return
-    /// Return the number of remote bytes read.
-    pub fn hdfsReadStatisticsGetRemoteBytesRead(stats: *const hdfsReadStatistics) -> i64;
+    // /// HDFS read statistics for a file,
+    // ///
+    // /// #### Params
+    // /// * ```stats``` - HDFS read statistics for a file.
+    // ///
+    // /// #### Return
+    // /// Return the number of remote bytes read.
+    // pub fn hdfsReadStatisticsGetRemoteBytesRead(stats: *const hdfsReadStatistics) -> i64;
 
-    /// Free some HDFS read statistics.
-    ///
-    /// #### Params
-    /// * ```stats``` - The HDFS read statistics to free.
-    pub fn hdfsFileFreeReadStatistics(stats: *mut hdfsReadStatistics);
+    // /// Free some HDFS read statistics.
+    // ///
+    // /// #### Params
+    // /// * ```stats``` - The HDFS read statistics to free.
+    // pub fn hdfsFileFreeReadStatistics(stats: *mut hdfsReadStatistics);
 
     /// Connect to a hdfs file system as a specific user.
     ///
@@ -469,17 +469,17 @@ extern "C" {
     /// 0 on success, -1 on error and sets errno
     pub fn hdfsHFlush(fs: *const hdfsFS, file: *const hdfsFile) -> c_int;
 
-    /// Similar to posix fsync, Flush out the data in client's
-    /// user buffer. all the way to the disk device (but the disk may have
-    /// it in its cache).
-    ///
-    /// #### Params
-    /// * ```fs``` - The configured filesystem handle.
-    /// * ```file``` - The file handle.
-    ///
-    /// #### Return
-    /// 0 on success, -1 on error and sets errno
-    pub fn hdfsHSync(fs: *const hdfsFS, file: *const hdfsFile) -> c_int;
+    // /// Similar to posix fsync, Flush out the data in client's
+    // /// user buffer. all the way to the disk device (but the disk may have
+    // /// it in its cache).
+    // ///
+    // /// #### Params
+    // /// * ```fs``` - The configured filesystem handle.
+    // /// * ```file``` - The file handle.
+    // ///
+    // /// #### Return
+    // /// 0 on success, -1 on error and sets errno
+    // pub fn hdfsHSync(fs: *const hdfsFS, file: *const hdfsFile) -> c_int;
 
     /// Number of bytes that can be read from this input stream without
     /// blocking.
@@ -632,13 +632,13 @@ extern "C" {
     /// * ```numEntries``` The size of the array.
     pub fn hdfsFreeFileInfo(hdfsFileInfo: *const hdfsFileInfo, numEntries: c_int);
 
-    /// hdfsFileIsEncrypted: determine if a file is encrypted based on its
-    /// hdfsFileInfo.
-    ///
-    /// #### Return
-    /// -1 if there was an error (errno will be set), 0 if the file is
-    /// not encrypted, 1 if the file is encrypted.
-    pub fn hdfsFileIsEncrypted(hdfsFileInfo: *const hdfsFileInfo) -> c_int;
+    // /// hdfsFileIsEncrypted: determine if a file is encrypted based on its
+    // /// hdfsFileInfo.
+    // ///
+    // /// #### Return
+    // /// -1 if there was an error (errno will be set), 0 if the file is
+    // /// not encrypted, 1 if the file is encrypted.
+    // pub fn hdfsFileIsEncrypted(hdfsFileInfo: *const hdfsFileInfo) -> c_int;
 
     /// Get hostnames where a particular block (determined by pos & blocksize)
     /// of a file is stored. The last element in the array is ```NULL```.
@@ -679,16 +679,17 @@ extern "C" {
     /// Returns the default blocksize, or -1 on error.
     pub fn hdfsGetDefaultBlockSize(fs: *const hdfsFS) -> tOffset;
 
-    /// Get the default blocksize at the filesystem indicated by a given path.
-    ///
-    /// #### Params
-    /// * ```fs``` - The configured filesystem handle.
-    /// * ```path``` - The given path will be used to locate the actual
-    /// filesystem.  The full path does not have to exist.
-    ///
-    /// #### Return
-    /// Returns the default blocksize, or -1 on error.
-    pub fn hdfsGetDefaultBlockSizeAtPath(fs: *const hdfsFS, path: *const c_char) -> tOffset;
+    // TODO: missing from the library
+    // /// Get the default blocksize at the filesystem indicated by a given path.
+    // ///
+    // /// #### Params
+    // /// * ```fs``` - The configured filesystem handle.
+    // /// * ```path``` - The given path will be used to locate the actual
+    // /// filesystem.  The full path does not have to exist.
+    // ///
+    // /// #### Return
+    // /// Returns the default blocksize, or -1 on error.
+    // pub fn hdfsGetDefaultBlockSizeAtPath(fs: *const hdfsFS, path: *const c_char) -> tOffset;
 
     /// Return the raw capacity of the filesystem.
     ///
@@ -746,6 +747,7 @@ extern "C" {
     /// 0 on success else -1
     pub fn hdfsUtime(fs: *const hdfsFS, path: *const c_char, mtime: tTime, atime: tTime) -> c_int;
 
+    // TODO: library does not have this one
     /// Allocate a zero-copy options structure.
     ///
     /// You must free all options structures allocated with this function using
@@ -756,6 +758,7 @@ extern "C" {
     /// If ```NULL``` is returned, errno will contain the error number.
     pub fn hadoopRzOptionsAlloc() -> *const hadoopRzOptions;
 
+    // TODO: library does not have this one
     /// Determine whether we should skip checksums in read0.
     ///
     /// #### Params
@@ -767,6 +770,7 @@ extern "C" {
     /// 0 on success; -1 plus errno on failure.
     pub fn hadoopRzOptionsSetSkipChecksum(opts: *const hadoopRzOptions, skip: c_int) -> c_int;
 
+    // TODO: library does not have this one
     /// Set the ByteBufferPool to use with read0.
     ///
     /// #### Params
@@ -784,6 +788,7 @@ extern "C" {
         className: *const c_char,
     ) -> c_int;
 
+    // TODO: library does not have this one
     /// Free a hadoopRzOptionsFree structure.
     ///
     /// #### Params
@@ -791,6 +796,7 @@ extern "C" {
     /// Any associated ByteBufferPool will also be freed.  
     pub fn hadoopRzOptionsFree(opts: *const hadoopRzOptions);
 
+    // TODO: library does not have this one
     /// Perform a byte buffer read. If possible, this will be a zero-copy
     /// (mmap) read.
     ///
@@ -817,7 +823,7 @@ extern "C" {
         opts: *const hadoopRzOptions,
         maxLength: i32,
     ) -> *const hadoopRzBuffer;
-
+    // TODO: library does not have this one
     /// Determine the length of the buffer returned from readZero.
     ///
     /// #### Params
@@ -827,6 +833,7 @@ extern "C" {
     /// the length of the buffer.
     pub fn hadoopRzBufferLength(buffer: *const hadoopRzBuffer) -> i32;
 
+    // TODO: library does not have this one
     /// Get a pointer to the raw buffer returned from readZero.
     ///
     /// #### Params
@@ -837,6 +844,7 @@ extern "C" {
     /// end-of-file has been reached.
     pub fn hadoopRzBufferGet(buffer: *const hadoopRzBuffer) -> *const c_void;
 
+    // TODO: library does not have this one
     /// Release a buffer obtained through readZero.
     ///
     /// #### Params
@@ -850,9 +858,17 @@ extern "C" {
     ///  hdfsSync - Flush out and sync the data in client's user buffer. After the return of this call, new readers will see the data.
     ///
     /// #### Params
-    ///  *`fs` -  configured filesystem handle
+    ///  * `fs` -  configured filesystem handle
     ///  * `file` - file handle
-    /// #### Params
+    ///
+    /// #### Return
     ///  0 on success, -1 on error and sets errno
     pub fn hdfsSync(fs: *const hdfsFS, file: *const hdfsFile) -> i32;
+
+    /// hdfsBuilderSetToken -Set the token used to authenticate
+    ///
+    /// #### Params
+    ///  * `bld` - The HDFS builder
+    ///  * `token` - The token used to authenticate
+    pub fn hdfsBuilderSetToken(bld: *mut hdfsBuilder, token: *const c_char);
 }
