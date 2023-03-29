@@ -25,20 +25,17 @@
 
 1. Install libhdfs3
 
-You can either install it via [Conda](https://docs.conda.io/en/latest/) 
+You can either install it via [Conda](https://docs.conda.io/en/latest/)
 
 ```shell
 conda install -c conda-forge libhdfs3
 ```
 
-or build it from source
+Or build it from source, but some patching might be required [as shown](https://github.com/conda-forge/libhdfs3-feedstock/tree/main/recipe)
 
 ```shell
-
-# A specific version that could be compiled on osx
-git clone https://github.com/ClickHouse-Extras/libhdfs3.git
-cd libhdfs3
-git checkout 24b058c356794ef6cc2d31323dc9adf0386652ff
+git clone https://github.com/apache/hawq
+cd hawq/depends/libhdfs3
 
 # then build it
 mkdir build && cd build
@@ -46,7 +43,6 @@ mkdir build && cd build
 make
 make install
 ```
-
 
 ## Configuration
 

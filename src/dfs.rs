@@ -768,6 +768,16 @@ impl<'a> HdfsFile<'a> {
             Ok(written_len as usize)
         }
     }
+
+    pub fn sync(&self) -> Result<(), HdfsErr> {
+        let written_len = unsafe { hdfsSync(self.fs.raw, self.file) };
+
+        if written_len < 0 {
+            Err(HdfsErr::Unknown)
+        } else {
+            Ok(())
+        }
+    }
     // consider adding it
 
     // pub fn get_file_status(&self) -> Result<FileStatus, HdfsErr> {

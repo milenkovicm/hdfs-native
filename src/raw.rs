@@ -431,25 +431,6 @@ extern "C" {
         length: tSize,
     ) -> tSize;
 
-    /// Positional read of data from an open file.
-    ///
-    /// #### Params
-    /// * ```fs``` - The configured filesystem handle.
-    /// * ```file``` - The file handle.
-    /// * ```position``` - Position from which to read
-    /// * ```buffer``` - The buffer to copy read bytes into.
-    /// * ```length``` - The length of the buffer.
-    ///
-    /// #### Return
-    /// See hdfsRead
-    // pub fn hdfsPread(
-    //     fs: *const hdfsFS,
-    //     file: *const hdfsFile,
-    //     position: tOffset,
-    //     buffer: *mut c_void,
-    //     length: tSize,
-    // ) -> tSize;
-
     /// Write data into an open file.
     ///
     /// #### Params
@@ -865,4 +846,13 @@ extern "C" {
     /// #### Return
     /// The buffer to release.
     pub fn hadoopRzBufferFree(file: *const hdfsFile, buffer: *const hadoopRzBuffer);
+
+    ///  hdfsSync - Flush out and sync the data in client's user buffer. After the return of this call, new readers will see the data.
+    ///
+    /// #### Params
+    ///  *`fs` -  configured filesystem handle
+    ///  * `file` - file handle
+    /// #### Params
+    ///  0 on success, -1 on error and sets errno
+    pub fn hdfsSync(fs: *const hdfsFS, file: *const hdfsFile) -> i32;
 }
