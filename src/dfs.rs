@@ -664,20 +664,21 @@ impl<'a> HdfsFile<'a> {
 
     /// Positional read of data from an open file.
     pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<usize, HdfsErr> {
-        let read_len = unsafe {
-            hdfsPread(
-                self.fs.raw,
-                self.file,
-                pos as tOffset,
-                buf.as_ptr() as *mut c_void,
-                buf.len() as tSize,
-            )
-        };
+        // let read_len = unsafe {
+        //     hdfsPread(
+        //         self.fs.raw,
+        //         self.file,
+        //         pos as tOffset,
+        //         buf.as_ptr() as *mut c_void,
+        //         buf.len() as tSize,
+        //     )
+        // };
+        // let seek_result = self.seek(pos as u64);
 
-        if read_len < 0 {
-            Err(HdfsErr::Unknown)
+        if self.seek(pos as u64) {
+            self.read(buf)
         } else {
-            Ok(read_len as usize)
+            Err(HdfsErr::Unknown)
         }
     }
 
@@ -708,11 +709,15 @@ impl<'a> HdfsFile<'a> {
         length: usize,
     ) -> Result<usize, HdfsErr> {
         let required_len = min(length, buf.len());
+
+        if !self.seek(pos as u64) {
+            return Err(HdfsErr::Unknown);
+        }
+
         let read_len = unsafe {
-            hdfsPread(
+            hdfsRead(
                 self.fs.raw,
                 self.file,
-                pos as tOffset,
                 buf.as_ptr() as *mut c_void,
                 required_len as tSize,
             )
