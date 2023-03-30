@@ -19,7 +19,9 @@
 
 # HDFS-Native
 
-> A rust wrapper over libhdfs3 developed by Apache HAWQ
+A rust wrapper over libhdfs3 developed by Apache HAWQ.
+
+This repo is fork of [datafusion-contrib/hdfs-native](https://github.com/datafusion-contrib/hdfs-native).
 
 ## Setup
 
