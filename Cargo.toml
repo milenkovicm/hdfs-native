@@ -29,3 +29,16 @@ libc = "0.2"
 log = "0.4"
 url = "2"
 thiserror = "1"
+
+[dev-dependencies]
+testcontainers = "0.14"
+testcontainers-minidfs-rs = { git = "https://github.com/milenkovicm/testcontainers-minidfs-rs.git" }
+ctor = "0.2"
+once_cell = "1.17"
+rusty_ulid = "2.0"
+log = "0.4"
+env_logger = "0.10"
+
+[features]
+default = []
+tests_start_docker = []
