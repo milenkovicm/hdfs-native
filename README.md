@@ -19,25 +19,19 @@
 
 # HDFS-Native
 
-A rust wrapper over libhdfs3 developed by Apache HAWQ.
+A rust wrapper over `libhdfs3`.
 
 This repo is fork of [datafusion-contrib/hdfs-native](https://github.com/datafusion-contrib/hdfs-native).
+
+NOTE: this crate is not usable for production.
 
 ## Setup
 
 1. Install libhdfs3
 
-You can either install it via [Conda](https://docs.conda.io/en/latest/)
-
-```shell
-conda install -c conda-forge libhdfs3
-```
-
-Or build it from source, but some patching might be required [as shown](https://github.com/conda-forge/libhdfs3-feedstock/tree/main/recipe)
-
-```shell
-git clone https://github.com/apache/hawq
-cd hawq/depends/libhdfs3
+```bash
+git clone https://github.com/milenkovicm/libhdfs3.git
+git branch patch_compile
 
 # then build it
 mkdir build && cd build
