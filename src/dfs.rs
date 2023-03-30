@@ -98,7 +98,7 @@ impl<'a> RzBuffer<'a> {
     /// Get the length of a raw buffer returned from zero-copy read.
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> i32 {
-        (unsafe { hadoopRzBufferLength(self.ptr) }) as i32
+        unsafe { hadoopRzBufferLength(self.ptr) }
     }
 
     /// Get a pointer to the raw buffer returned from zero-copy read.
@@ -119,7 +119,7 @@ impl<'a> RzBuffer<'a> {
         let len = unsafe { hadoopRzBufferLength(self.ptr) as usize };
 
         if !ptr.is_null() {
-            Ok(unsafe { mem::transmute(slice::from_raw_parts(ptr, len as usize)) })
+            Ok(unsafe { mem::transmute(slice::from_raw_parts(ptr, len)) })
         } else {
             Err(HdfsErr::Unknown)
         }
@@ -150,7 +150,7 @@ struct HdfsFileInfoPtr {
 unsafe impl Send for HdfsFileInfoPtr {}
 unsafe impl Sync for HdfsFileInfoPtr {}
 
-impl<'a> Drop for HdfsFileInfoPtr {
+impl Drop for HdfsFileInfoPtr {
     fn drop(&mut self) {
         unsafe { hdfsFreeFileInfo(self.ptr, self.len) };
     }
@@ -239,7 +239,7 @@ impl FileStatus {
     /// Get the permissions associated with the file
     #[inline]
     pub fn permission(&self) -> i16 {
-        unsafe { &*self.ptr() }.mPermissions as i16
+        unsafe { &*self.ptr() }.mPermissions
     }
 
     /// Get the length of this file, in bytes.
@@ -258,7 +258,7 @@ impl FileStatus {
     /// Get the replication factor of a file.
     #[inline]
     pub fn replica_count(&self) -> i16 {
-        unsafe { &*self.ptr() }.mReplication as i16
+        unsafe { &*self.ptr() }.mReplication
     }
 
     /// Get the last modification time for the file in seconds
@@ -373,7 +373,7 @@ impl HdfsFs {
                 O_WRONLY,
                 buf_size as c_int,
                 replica_num as c_short,
-                block_size as i32,
+                block_size,
             )
         };
 
@@ -489,7 +489,7 @@ impl HdfsFs {
 
     /// Set the replication of the specified file to the supplied value
     pub fn set_replication(&self, path: &str, num: i16) -> Result<bool, HdfsErr> {
-        let res = unsafe { hdfsSetReplication(self.raw, to_raw!(path), num as i16) };
+        let res = unsafe { hdfsSetReplication(self.raw, to_raw!(path), num) };
 
         if res == 0 {
             Ok(true)
@@ -738,8 +738,7 @@ impl<'a> HdfsFile<'a> {
     /// (mmap) read.
     #[allow(dead_code)]
     fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
-        let buf: *const hadoopRzBuffer =
-            unsafe { hadoopReadZero(self.file, opts.ptr, max_len as i32) };
+        let buf: *const hadoopRzBuffer = unsafe { hadoopReadZero(self.file, opts.ptr, max_len) };
 
         if !buf.is_null() {
             Ok(RzBuffer {
