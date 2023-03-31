@@ -83,7 +83,10 @@ impl RzOptions {
 
 /// A buffer returned from zero-copy read.
 /// This buffer will be automatically freed when its lifetime is finished.
-pub struct RzBuffer<'a> {
+
+// removed pub visibility as it does not look like library supports it
+#[allow(dead_code)]
+struct RzBuffer<'a> {
     file: &'a HdfsFile<'a>,
     ptr: *const hadoopRzBuffer,
 }
@@ -94,6 +97,7 @@ impl<'a> Drop for RzBuffer<'a> {
     }
 }
 
+#[allow(dead_code)]
 impl<'a> RzBuffer<'a> {
     /// Get the length of a raw buffer returned from zero-copy read.
     #[allow(clippy::len_without_is_empty)]
@@ -144,9 +148,7 @@ struct HdfsFileInfoPtr {
 
 //
 // TODO: I'm not sure about this part, fingers crossed it will be ok
-// https://stackoverflow.com/questions/50258359/can-a-struct-containing-a-raw-pointer-implement-send-and-be-ffi-safe
 //
-
 unsafe impl Send for HdfsFileInfoPtr {}
 unsafe impl Sync for HdfsFileInfoPtr {}
 
@@ -573,7 +575,6 @@ impl<'a> From<&HdfsFile<'a>> for RawHdfsFileWrapper {
 }
 
 unsafe impl Send for RawHdfsFileWrapper {}
-
 unsafe impl Sync for RawHdfsFileWrapper {}
 
 impl<'a> HdfsFile<'a> {
