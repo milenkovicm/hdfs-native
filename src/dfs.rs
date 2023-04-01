@@ -187,10 +187,7 @@ impl FileStatus {
     /// to dynamically allocated array.
     #[inline]
     fn from_array(raw: Arc<HdfsFileInfoPtr>, idx: u32) -> FileStatus {
-        FileStatus {
-            raw,
-            idx,
-        }
+        FileStatus { raw, idx }
     }
 
     #[inline]
@@ -591,7 +588,7 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Close the opened file
-    pub fn close(&self) -> Result<bool, HdfsErr> {
+    fn close(&self) -> Result<bool, HdfsErr> {
         if unsafe { hdfsCloseFile(self.fs.raw, self.file) } == 0 {
             Ok(true)
         } else {
@@ -600,13 +597,13 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Flush the data.
-    pub fn flush(&self) -> bool {
+    pub fn flush(&mut self) -> bool {
         (unsafe { hdfsFlush(self.fs.raw, self.file) }) == 0
     }
 
     /// Flush out the data in client's user buffer. After the return of this
     /// call, new readers will see the data.
-    pub fn hflush(&self) -> bool {
+    pub fn hflush(&mut self) -> bool {
         (unsafe { hdfsHFlush(self.fs.raw, self.file) }) == 0
     }
 
@@ -752,7 +749,7 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Write data into an open file.
-    pub fn write(&self, buf: &[u8]) -> Result<usize, HdfsErr> {
+    pub fn write(&mut self, buf: &[u8]) -> Result<usize, HdfsErr> {
         let written_len = unsafe {
             hdfsWrite(
                 self.fs.raw,
@@ -769,7 +766,7 @@ impl<'a> HdfsFile<'a> {
         }
     }
 
-    pub fn sync(&self) -> Result<(), HdfsErr> {
+    pub fn sync(&mut self) -> Result<(), HdfsErr> {
         let written_len = unsafe { hdfsSync(self.fs.raw, self.file) };
 
         if written_len < 0 {
@@ -787,6 +784,17 @@ impl<'a> HdfsFile<'a> {
     //         Ok(FileStatus::new(self.ptr().clone()))
     //     }
     // }
+}
+
+impl<'a> Drop for HdfsFile<'a> {
+    fn drop(&mut self) {
+        if self.is_writable() {
+            self.flush();
+        }
+        match self.close() {
+            _ => (),
+        };
+    }
 }
 
 #[cfg(test)]

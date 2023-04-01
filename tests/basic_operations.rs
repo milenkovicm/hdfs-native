@@ -28,19 +28,19 @@ mod e2e {
         let test_file = format!("{}/{}", test_dir, generate_unique_name());
         info!("File used for basic file operations: [{}]", test_file);
 
-        let f = fs.create(&test_file).expect("file open for writing");
+        let mut f = fs.create(&test_file).expect("file open for writing");
         assert!(f.is_writable());
         assert!(!f.is_readable());
 
         f.write(DATA.as_bytes()).expect("data to be written");
         f.flush();
-        f.close().expect("file to be closed");
+        drop(f);
 
-        let f = fs.append(&test_file).expect("file open for append");
+        let mut f = fs.append(&test_file).expect("file open for append");
+        assert!(f.is_writable());
+        assert!(!f.is_readable());
         f.write(DATA.as_bytes()).expect("data to be appended");
-
         f.flush();
-        f.close().expect("file to be closed");
 
         let f = fs.open(&test_file).expect("file open");
         assert!(!f.is_writable());
@@ -73,11 +73,10 @@ mod e2e {
 
         let test_file = format!("{}/{}", test_dir, generate_unique_name());
 
-        let f = fs.create(&test_file).expect("file open for writing");
+        let mut f = fs.create(&test_file).expect("file open for writing");
 
         f.write(DATA.as_bytes()).expect("data to be written");
         f.flush();
-        f.close().expect("file to be closed");
 
         let fs = fs_registry
             .get(&hdfs_server_url)
@@ -110,11 +109,10 @@ mod e2e {
 
         let test_file = format!("{}/{}", test_dir, generate_unique_name());
 
-        let f = fs.create(&test_file).expect("file open for writing");
+        let mut f = fs.create(&test_file).expect("file open for writing");
 
         f.write(DATA.as_bytes()).expect("data to be written");
         f.flush();
-        f.close().expect("file to be closed");
 
         let fs = fs_registry
             .get(&hdfs_server_url)
@@ -151,12 +149,11 @@ mod e2e {
 
         let test_file = format!("{}/{}", test_dir, generate_unique_name());
 
-        let f = fs.create(&test_file).expect("file open for writing");
+        let mut f = fs.create(&test_file).expect("file open for writing");
 
         f.write(DATA.as_bytes()).expect("data to be written");
         f.sync().expect("file synced");
         f.flush();
-        f.close().expect("file to be closed");
 
         let fs = fs_registry
             .get(&hdfs_server_url)
@@ -193,12 +190,11 @@ mod e2e {
 
         let test_file = format!("{}/{}", test_dir, generate_unique_name());
 
-        let f = fs.create(&test_file).expect("file open for writing");
+        let mut f = fs.create(&test_file).expect("file open for writing");
 
         f.write(DATA.as_bytes()).expect("data to be written");
         f.sync().expect("file synced");
         f.flush();
-        f.close().expect("file to be closed");
 
         let status = fs
             .get_file_status(&test_file)
