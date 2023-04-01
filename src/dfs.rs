@@ -145,17 +145,16 @@ struct HdfsFileInfoPtr {
     pub len: i32,
 }
 
-//
-// TODO: I'm not sure about this part, fingers crossed it will be ok
-//
-unsafe impl Send for HdfsFileInfoPtr {}
-unsafe impl Sync for HdfsFileInfoPtr {}
-
 impl Drop for HdfsFileInfoPtr {
     fn drop(&mut self) {
         unsafe { hdfsFreeFileInfo(self.ptr, self.len) };
     }
 }
+
+// TODO: I'm not sure about this part, fingers crossed it will be ok
+unsafe impl Send for HdfsFileInfoPtr {}
+unsafe impl Sync for HdfsFileInfoPtr {}
+
 
 impl HdfsFileInfoPtr {
     fn new(ptr: *const hdfsFileInfo) -> HdfsFileInfoPtr {
@@ -551,6 +550,20 @@ pub struct HdfsFile<'a> {
     file: *const hdfsFile,
 }
 
+impl<'a> Drop for HdfsFile<'a> {
+    fn drop(&mut self) {
+        if self.is_writable() {
+            self.flush();
+        }
+        match self.close() {
+            _ => (),
+        };
+    }
+}
+
+unsafe impl Send for RawHdfsFileWrapper {}
+unsafe impl Sync for RawHdfsFileWrapper {}
+
 #[derive(Clone)]
 pub struct RawHdfsFileWrapper {
     pub path: String,
@@ -565,9 +578,6 @@ impl<'a> From<&HdfsFile<'a>> for RawHdfsFileWrapper {
         }
     }
 }
-
-unsafe impl Send for RawHdfsFileWrapper {}
-unsafe impl Sync for RawHdfsFileWrapper {}
 
 impl<'a> HdfsFile<'a> {
     pub fn from_raw(rw: &RawHdfsFileWrapper, fs: &'a HdfsFs) -> HdfsFile<'a> {
@@ -786,16 +796,3 @@ impl<'a> HdfsFile<'a> {
     // }
 }
 
-impl<'a> Drop for HdfsFile<'a> {
-    fn drop(&mut self) {
-        if self.is_writable() {
-            self.flush();
-        }
-        match self.close() {
-            _ => (),
-        };
-    }
-}
-
-#[cfg(test)]
-mod test {}
