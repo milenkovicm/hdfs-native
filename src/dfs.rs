@@ -155,7 +155,6 @@ impl Drop for HdfsFileInfoPtr {
 unsafe impl Send for HdfsFileInfoPtr {}
 unsafe impl Sync for HdfsFileInfoPtr {}
 
-
 impl HdfsFileInfoPtr {
     fn new(ptr: *const hdfsFileInfo) -> HdfsFileInfoPtr {
         HdfsFileInfoPtr { ptr, len: 1 }
@@ -561,33 +560,33 @@ impl<'a> Drop for HdfsFile<'a> {
     }
 }
 
-unsafe impl Send for RawHdfsFileWrapper {}
-unsafe impl Sync for RawHdfsFileWrapper {}
+// unsafe impl Send for RawHdfsFileWrapper {}
+// unsafe impl Sync for RawHdfsFileWrapper {}
 
-#[derive(Clone)]
-pub struct RawHdfsFileWrapper {
-    pub path: String,
-    pub file: *const hdfsFile,
-}
+// #[derive(Clone)]
+// pub struct RawHdfsFileWrapper {
+//     pub path: String,
+//     pub file: *const hdfsFile,
+// }
 
-impl<'a> From<&HdfsFile<'a>> for RawHdfsFileWrapper {
-    fn from(file: &HdfsFile<'a>) -> Self {
-        RawHdfsFileWrapper {
-            path: file.path.clone(),
-            file: file.file,
-        }
-    }
-}
+// impl<'a> From<HdfsFile<'a>> for RawHdfsFileWrapper {
+//     fn from(file: HdfsFile<'a>) -> Self {
+//         RawHdfsFileWrapper {
+//             path: file.path.clone(),
+//             file: file.file,
+//         }
+//     }
+// }
 
 impl<'a> HdfsFile<'a> {
-    pub fn from_raw(rw: &RawHdfsFileWrapper, fs: &'a HdfsFs) -> HdfsFile<'a> {
-        let path = rw.path.clone();
-        HdfsFile {
-            fs,
-            path,
-            file: rw.file,
-        }
-    }
+    // pub fn from_raw(rw: &RawHdfsFileWrapper, fs: &'a HdfsFs) -> HdfsFile<'a> {
+    //     let path = rw.path.clone();
+    //     HdfsFile {
+    //         fs,
+    //         path,
+    //         file: rw.file,
+    //     }
+    // }
 
     pub fn available(&self) -> Result<bool, HdfsErr> {
         if unsafe { hdfsAvailable(self.fs.raw, self.file) } == 0 {
@@ -795,4 +794,3 @@ impl<'a> HdfsFile<'a> {
     //     }
     // }
 }
-
