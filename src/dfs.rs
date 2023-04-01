@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::marker::PhantomData;
 use std::mem;
 use std::slice;
 use std::string::String;
@@ -172,7 +171,6 @@ impl HdfsFileInfoPtr {
 pub struct FileStatus {
     raw: Arc<HdfsFileInfoPtr>,
     idx: u32,
-    _marker: PhantomData<()>,
 }
 
 impl FileStatus {
@@ -182,7 +180,6 @@ impl FileStatus {
         FileStatus {
             raw: Arc::new(HdfsFileInfoPtr::new(ptr)),
             idx: 0,
-            _marker: PhantomData,
         }
     }
 
@@ -193,7 +190,6 @@ impl FileStatus {
         FileStatus {
             raw,
             idx,
-            _marker: PhantomData,
         }
     }
 
@@ -286,7 +282,6 @@ pub struct HdfsFs {
 }
 
 unsafe impl Send for HdfsFs {}
-
 unsafe impl Sync for HdfsFs {}
 
 impl Debug for HdfsFs {
