@@ -5,7 +5,7 @@ mod e2e {
     use std::sync::Arc;
 
     use crate::common::*;
-    use hdfs_native::{walkdir::HdfsWalkDir, HdfsErr, HdfsFs, HdfsRegistry};
+    use hdfs_native::{walk_dir::HdfsWalkDir, HdfsErr, HdfsFs, HdfsRegistry};
     use log::info;
 
     #[test]

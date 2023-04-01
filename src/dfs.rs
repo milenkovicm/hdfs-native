@@ -784,10 +784,11 @@ impl<'a> HdfsFile<'a> {
             Ok(())
         }
     }
-    // consider adding it
 
+    // consider adding it
+    //
     // pub fn get_file_status(&self) -> Result<FileStatus, HdfsErr> {
-    //     if self.ptr().is_null() {
+    //     if self. ptr().is_null() {
     //         Err(HdfsErr::Unknown)
     //     } else {
     //         Ok(FileStatus::new(self.ptr().clone()))
