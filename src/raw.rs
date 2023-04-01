@@ -84,8 +84,9 @@ pub struct hdfsFileInfo {
     /// the last access time for the file in seconds
     pub mLastAccess: tTime,
 }
+// https://doc.rust-lang.org/nomicon/ffi.html#linking
 
-#[link(name = "hdfs3", kind = "dylib")]
+#[link(name = "hdfs3")]
 extern "C" {
 
     /// Determine if a file is open for read.
