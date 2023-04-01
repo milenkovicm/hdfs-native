@@ -18,10 +18,9 @@
 //! libhdfs FFI Binding APIs
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(dead_code)]
 
 use libc::{c_char, c_int, c_short, c_void, size_t, time_t};
-
-// https://github.com/apache/hawq/blob/b0a71f0617b68c0977acd6d3601052a7e80bacf5/depends/libhdfs3/src/client/hdfs.h
 
 /// Opaque Pointer of hdfsFS
 pub enum hdfsFS {}
