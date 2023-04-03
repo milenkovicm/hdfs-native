@@ -692,8 +692,12 @@ impl<'a> HdfsFile<'a> {
 
 pub fn get_last_error() -> Result<&'static str, std::str::Utf8Error> {
     let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
-    let c_str = unsafe { CStr::from_ptr(char_ptr) };
-    c_str.to_str()
+    if char_ptr.is_null() {
+        Ok("")
+    } else {
+        let c_str = unsafe { CStr::from_ptr(char_ptr) };
+        c_str.to_str()
+    }   
 }
 //
 // Retired but not deleted code
