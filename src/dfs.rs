@@ -28,10 +28,6 @@ use crate::{b2i, from_raw, to_raw};
 use std::cmp::min;
 use std::fmt::{Debug, Formatter};
 
-const O_RDONLY: c_int = libc::O_RDONLY;
-const O_WRONLY: c_int = libc::O_WRONLY;
-const O_APPEND: c_int = libc::O_WRONLY | libc::O_APPEND;
-
 /// Options for zero-copy read
 // removed pub visibility as it does not look like library supports it
 struct RzOptions {

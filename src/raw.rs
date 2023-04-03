@@ -22,6 +22,10 @@
 
 use libc::{c_char, c_int, c_short, c_void, size_t, time_t};
 
+pub const O_RDONLY: c_int = libc::O_RDONLY;
+pub const O_WRONLY: c_int = libc::O_WRONLY;
+pub const O_APPEND: c_int = libc::O_WRONLY | libc::O_APPEND;
+
 /// Opaque Pointer of hdfsFS
 pub enum hdfsFS {}
 
