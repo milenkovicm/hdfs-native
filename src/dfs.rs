@@ -16,8 +16,7 @@
 // under the License.
 
 use std::ffi::CStr;
-use std::mem;
-use std::slice;
+
 use std::string::String;
 use std::sync::Arc;
 
@@ -25,107 +24,13 @@ use libc::{c_char, c_int, c_short, c_void, time_t};
 
 use crate::err::HdfsErr;
 use crate::raw::*;
-use crate::{b2i, from_raw, to_raw};
+use crate::{from_raw, to_raw};
 use std::cmp::min;
 use std::fmt::{Debug, Formatter};
 
 /// Options for zero-copy read
 // removed pub visibility as it does not look like library supports it
-struct RzOptions {
-    ptr: *const hadoopRzOptions,
-}
-
-impl Drop for RzOptions {
-    fn drop(&mut self) {
-        unsafe { hadoopRzOptionsFree(self.ptr) }
-    }
-}
-
-impl Default for RzOptions {
-    fn default() -> Self {
-        RzOptions::new()
-    }
-}
-
-// removed pub visibility as it does not look like library supports it
-#[allow(dead_code)]
-impl RzOptions {
-    pub fn new() -> RzOptions {
-        RzOptions {
-            ptr: unsafe { hadoopRzOptionsAlloc() },
-        }
-    }
-
-    pub fn skip_checksum(&self, skip: bool) -> Result<bool, HdfsErr> {
-        let res = unsafe { hadoopRzOptionsSetSkipChecksum(self.ptr, b2i!(skip)) };
-
-        if res == 0 {
-            Ok(true)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
-
-    pub fn set_bytebuffer_pool(&self, class_name: &str) -> Result<bool, HdfsErr> {
-        let res = unsafe { hadoopRzOptionsSetByteBufferPool(self.ptr, to_raw!(class_name)) };
-
-        if res == 0 {
-            Ok(true)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
-}
-
-/// A buffer returned from zero-copy read.
-/// This buffer will be automatically freed when its lifetime is finished.
-
-// removed pub visibility as it does not look like library supports it
-#[allow(dead_code)]
-struct RzBuffer<'a> {
-    file: &'a HdfsFile<'a>,
-    ptr: *const hadoopRzBuffer,
-}
-
-impl<'a> Drop for RzBuffer<'a> {
-    fn drop(&mut self) {
-        unsafe { hadoopRzBufferFree(self.file.file, self.ptr) }
-    }
-}
-
-#[allow(dead_code)]
-impl<'a> RzBuffer<'a> {
-    /// Get the length of a raw buffer returned from zero-copy read.
-    #[allow(clippy::len_without_is_empty)]
-    pub fn len(&self) -> i32 {
-        unsafe { hadoopRzBufferLength(self.ptr) }
-    }
-
-    /// Get a pointer to the raw buffer returned from zero-copy read.
-    pub fn as_ptr(&self) -> Result<*const u8, HdfsErr> {
-        let ptr = unsafe { hadoopRzBufferGet(self.ptr) };
-
-        if !ptr.is_null() {
-            Ok(ptr as *const u8)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
-
-    /// Get a Slice transformed from a raw buffer
-    pub fn as_slice(&'a self) -> Result<&[u8], HdfsErr> {
-        let ptr = unsafe { hadoopRzBufferGet(self.ptr) as *const u8 };
-
-        let len = unsafe { hadoopRzBufferLength(self.ptr) as usize };
-
-        if !ptr.is_null() {
-            Ok(unsafe { mem::transmute(slice::from_raw_parts(ptr, len)) })
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
-}
-
+//
 /// Includes host names where a particular block of a file is stored.
 pub struct BlockHosts {
     ptr: *const *const *const c_char,
@@ -566,24 +471,6 @@ impl<'a> Drop for HdfsFile<'a> {
     }
 }
 
-// unsafe impl Send for RawHdfsFileWrapper {}
-// unsafe impl Sync for RawHdfsFileWrapper {}
-
-// #[derive(Clone)]
-// pub struct RawHdfsFileWrapper {
-//     pub path: String,
-//     pub file: *const hdfsFile,
-// }
-
-// impl<'a> From<HdfsFile<'a>> for RawHdfsFileWrapper {
-//     fn from(file: HdfsFile<'a>) -> Self {
-//         RawHdfsFileWrapper {
-//             path: file.path.clone(),
-//             file: file.file,
-//         }
-//     }
-// }
-
 impl<'a> HdfsFile<'a> {
     // pub fn from_raw(rw: &RawHdfsFileWrapper, fs: &'a HdfsFs) -> HdfsFile<'a> {
     //     let path = rw.path.clone();
@@ -740,23 +627,25 @@ impl<'a> HdfsFile<'a> {
             Ok(read_len as usize)
         }
     }
+    // retired code
+    //
     // removed pub visibility as it does not support it at the moment
     //
     /// Perform a byte buffer read. If possible, this will be a zero-copy
     /// (mmap) read.
-    #[allow(dead_code)]
-    fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
-        let buf: *const hadoopRzBuffer = unsafe { hadoopReadZero(self.file, opts.ptr, max_len) };
-
-        if !buf.is_null() {
-            Ok(RzBuffer {
-                file: self,
-                ptr: buf,
-            })
-        } else {
-            Err(HdfsErr::Unknown)
-        }
-    }
+    // #[allow(dead_code)]
+    // fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
+    //     let buf: *const hadoopRzBuffer = unsafe { hadoopReadZero(self.file, opts.ptr, max_len) };
+    //
+    //     if !buf.is_null() {
+    //         Ok(RzBuffer {
+    //             file: self,
+    //             ptr: buf,
+    //         })
+    //     } else {
+    //         Err(HdfsErr::Unknown)
+    //     }
+    // }
 
     /// Seek to given offset in file.
     pub fn seek(&self, offset: u64) -> bool {
@@ -806,3 +695,122 @@ pub fn get_last_error() -> Result<&'static str, std::str::Utf8Error> {
     let c_str = unsafe { CStr::from_ptr(char_ptr) };
     c_str.to_str()
 }
+//
+// Retired but not deleted code
+//
+
+//
+// unsafe impl Send for RawHdfsFileWrapper {}
+// unsafe impl Sync for RawHdfsFileWrapper {}
+//
+// #[derive(Clone)]
+// pub struct RawHdfsFileWrapper {
+//     pub path: String,
+//     pub file: *const hdfsFile,
+// }
+//
+// impl<'a> From<HdfsFile<'a>> for RawHdfsFileWrapper {
+//     fn from(file: HdfsFile<'a>) -> Self {
+//         RawHdfsFileWrapper {
+//             path: file.path.clone(),
+//             file: file.file,
+//         }
+//     }
+// }
+//
+// use std::mem;
+// use std::slice;
+//struct RzOptions {
+//     ptr: *const hadoopRzOptions,
+// }
+
+// impl Drop for RzOptions {
+//     fn drop(&mut self) {
+//         unsafe { hadoopRzOptionsFree(self.ptr) }
+//     }
+// }
+
+// impl Default for RzOptions {
+//     fn default() -> Self {
+//         RzOptions::new()
+//     }
+// }
+
+// // removed pub visibility as it does not look like library supports it
+// #[allow(dead_code)]
+// impl RzOptions {
+//     pub fn new() -> RzOptions {
+//         RzOptions {
+//             ptr: unsafe { hadoopRzOptionsAlloc() },
+//         }
+//     }
+
+//     pub fn skip_checksum(&self, skip: bool) -> Result<bool, HdfsErr> {
+//         let res = unsafe { hadoopRzOptionsSetSkipChecksum(self.ptr, b2i!(skip)) };
+
+//         if res == 0 {
+//             Ok(true)
+//         } else {
+//             Err(HdfsErr::Unknown)
+//         }
+//     }
+
+//     pub fn set_bytebuffer_pool(&self, class_name: &str) -> Result<bool, HdfsErr> {
+//         let res = unsafe { hadoopRzOptionsSetByteBufferPool(self.ptr, to_raw!(class_name)) };
+
+//         if res == 0 {
+//             Ok(true)
+//         } else {
+//             Err(HdfsErr::Unknown)
+//         }
+//     }
+// }
+
+// /// A buffer returned from zero-copy read.
+// /// This buffer will be automatically freed when its lifetime is finished.
+
+// // removed pub visibility as it does not look like library supports it
+// #[allow(dead_code)]
+// struct RzBuffer<'a> {
+//     file: &'a HdfsFile<'a>,
+//     ptr: *const hadoopRzBuffer,
+// }
+
+// impl<'a> Drop for RzBuffer<'a> {
+//     fn drop(&mut self) {
+//         unsafe { hadoopRzBufferFree(self.file.file, self.ptr) }
+//     }
+// }
+
+// #[allow(dead_code)]
+// impl<'a> RzBuffer<'a> {
+//     /// Get the length of a raw buffer returned from zero-copy read.
+//     #[allow(clippy::len_without_is_empty)]
+//     pub fn len(&self) -> i32 {
+//         unsafe { hadoopRzBufferLength(self.ptr) }
+//     }
+
+//     /// Get a pointer to the raw buffer returned from zero-copy read.
+//     pub fn as_ptr(&self) -> Result<*const u8, HdfsErr> {
+//         let ptr = unsafe { hadoopRzBufferGet(self.ptr) };
+
+//         if !ptr.is_null() {
+//             Ok(ptr as *const u8)
+//         } else {
+//             Err(HdfsErr::Unknown)
+//         }
+//     }
+
+//     /// Get a Slice transformed from a raw buffer
+//     pub fn as_slice(&'a self) -> Result<&[u8], HdfsErr> {
+//         let ptr = unsafe { hadoopRzBufferGet(self.ptr) as *const u8 };
+
+//         let len = unsafe { hadoopRzBufferLength(self.ptr) as usize };
+
+//         if !ptr.is_null() {
+//             Ok(unsafe { mem::transmute(slice::from_raw_parts(ptr, len)) })
+//         } else {
+//             Err(HdfsErr::Unknown)
+//         }
+//     }
+// }
