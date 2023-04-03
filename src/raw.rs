@@ -869,10 +869,19 @@ extern "C" {
     ///  0 on success, -1 on error and sets errno
     pub fn hdfsSync(fs: *const hdfsFS, file: *const hdfsFile) -> i32;
 
-    /// hdfsBuilderSetToken -Set the token used to authenticate
+    /// hdfsBuilderSetToken - Set the token used to authenticate
     ///
     /// #### Params
     ///  * `bld` - The HDFS builder
     ///  * `token` - The token used to authenticate
     pub fn hdfsBuilderSetToken(bld: *mut hdfsBuilder, token: *const c_char);
+
+    /// hdfsGetLastError - Returns last available error message
+    ///
+    /// the problem with this method is that not all operations will yield exception in case of error
+    /// also, it is not deterministic of this message is set at the specific call or some of past calls
+    ///
+    /// #### Return
+    ///  last exception message which was set
+    pub fn hdfsGetLastError() -> *const c_char;
 }

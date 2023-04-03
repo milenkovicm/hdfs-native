@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::ffi::CStr;
 use std::mem;
 use std::slice;
 use std::string::String;
@@ -792,7 +793,6 @@ impl<'a> HdfsFile<'a> {
             Ok(())
         }
     }
-
     // consider adding it
     //
     // pub fn get_file_status(&self) -> Result<FileStatus, HdfsErr> {
@@ -802,4 +802,10 @@ impl<'a> HdfsFile<'a> {
     //         Ok(FileStatus::new(self.ptr().clone()))
     //     }
     // }
+}
+
+pub fn get_last_error() -> Result<&'static str, std::str::Utf8Error> {
+    let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
+    let c_str = unsafe { CStr::from_ptr(char_ptr) };
+    c_str.to_str()
 }
