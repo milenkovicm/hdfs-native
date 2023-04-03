@@ -269,8 +269,10 @@ impl FileStatus {
 
 /// Hdfs Filesystem
 ///
-/// It is basically thread safe because the native API for hdfsFs is thread-safe.
-#[derive(Clone)]
+
+// we have not opted for clone in this case as it would make deallocation
+// much harder to track.
+// #[derive(Clone)]
 pub struct HdfsFs {
     pub url: String,
     raw: *const hdfsFS,
@@ -279,15 +281,15 @@ pub struct HdfsFs {
 unsafe impl Send for HdfsFs {}
 unsafe impl Sync for HdfsFs {}
 
-// impl Drop for HdfsFs {
-//     fn drop(&mut self) {
-//         unsafe {
-//             match hdfsDisconnect(self.raw) {
-//                 _ => (),
-//             }
-//         }
-//     }
-// }
+impl Drop for HdfsFs {
+    fn drop(&mut self) {
+        unsafe {
+            match hdfsDisconnect(self.raw) {
+                _ => (),
+            }
+        }
+    }
+}
 
 impl Debug for HdfsFs {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

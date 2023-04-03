@@ -10,6 +10,17 @@ mod e2e {
     const DATA: &str = "1234567890";
 
     #[test]
+    fn should_connect() {
+        let fs_registry = HdfsRegistry::new();
+        let hdfs_server_url = generate_hdfs_url();
+
+        info!("HDFS Name Note to be used: [{}]", hdfs_server_url);
+        let _fs = fs_registry
+            .get(&hdfs_server_url)
+            .expect("creation of registry");
+    }
+
+    #[test]
     fn basic_operations_check() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();

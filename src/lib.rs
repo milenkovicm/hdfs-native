@@ -31,7 +31,7 @@ pub use crate::util::HdfsUtil;
 use crate::raw::{
     hdfsBuilderConnect, hdfsBuilderSetNameNode, hdfsBuilderSetNameNodePort, hdfsFS, hdfsNewBuilder,
 };
-use log::info;
+use log::{debug, info};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use url::Url;
@@ -41,7 +41,7 @@ static LOCAL_FS_SCHEME: &str = "file";
 /// HdfsRegistry which stores seen HdfsFs instances.
 #[derive(Debug)]
 pub struct HdfsRegistry {
-    all_fs: Arc<Mutex<HashMap<String, HdfsFs>>>,
+    all_fs: Arc<Mutex<HashMap<String, Arc<HdfsFs>>>>,
 }
 
 impl Default for HdfsRegistry {
@@ -76,10 +76,6 @@ impl HdfsRegistry {
         }
     }
 
-    pub fn new_from(fs: Arc<Mutex<HashMap<String, HdfsFs>>>) -> HdfsRegistry {
-        HdfsRegistry { all_fs: fs }
-    }
-
     fn get_namenode(&self, path: &str) -> Result<NNScheme, HdfsErr> {
         match Url::parse(path) {
             Ok(url) => {
@@ -98,30 +94,34 @@ impl HdfsRegistry {
         }
     }
 
-    pub fn get(&self, path: &str) -> Result<HdfsFs, HdfsErr> {
+    pub fn get(&self, path: &str) -> Result<Arc<HdfsFs>, HdfsErr> {
         let host_port = self.get_namenode(path)?;
 
         let mut map = self.all_fs.lock().unwrap();
 
-        let entry: &mut HdfsFs = map.entry(host_port.to_string()).or_insert({
+        let entry: &mut Arc<HdfsFs> = map.entry(host_port.to_string()).or_insert({
             let hdfs_fs: *const hdfsFS = unsafe {
                 let hdfs_builder = hdfsNewBuilder();
                 match host_port {
-                    NNScheme::Local => {} //NO-OP
+                    NNScheme::Local => {}
                     NNScheme::Remote(ref hp) => {
                         hdfsBuilderSetNameNode(hdfs_builder, to_raw!(&*hp.host));
                         hdfsBuilderSetNameNodePort(hdfs_builder, hp.port);
                     }
                 }
-                info!("Connecting to NameNode ({})", &host_port.to_string());
+                info!(
+                    "Connecting to NameNode ... url: [{}]",
+                    &host_port.to_string()
+                );
                 hdfsBuilderConnect(hdfs_builder)
             };
 
             if hdfs_fs.is_null() {
                 return Err(HdfsErr::CannotConnectToNameNode(host_port.to_string()));
             }
-            info!("Connected to NameNode ({})", &host_port.to_string());
-            HdfsFs::new(host_port.to_string(), hdfs_fs)
+            debug!("Connected to NameNode, url: [{}]", &host_port.to_string());
+
+            Arc::new(HdfsFs::new(host_port.to_string(), hdfs_fs))
         });
 
         Ok(entry.clone())
