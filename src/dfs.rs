@@ -281,9 +281,7 @@ unsafe impl Sync for HdfsFs {}
 impl Drop for HdfsFs {
     fn drop(&mut self) {
         unsafe {
-            match hdfsDisconnect(self.raw) {
-                _ => (),
-            }
+            hdfsDisconnect(self.raw);
         }
     }
 }
@@ -563,9 +561,8 @@ impl<'a> Drop for HdfsFile<'a> {
         if self.is_writable() {
             self.flush();
         }
-        match self.close() {
-            _ => (),
-        };
+        // this is due to clippy suggestion
+        let _ = self.close();
     }
 }
 
