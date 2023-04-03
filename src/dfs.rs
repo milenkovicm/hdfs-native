@@ -129,7 +129,7 @@ impl<'a> RzBuffer<'a> {
     }
 }
 
-/// Includes hostnames where a particular block of a file is stored.
+/// Includes host names where a particular block of a file is stored.
 pub struct BlockHosts {
     ptr: *const *const *const c_char,
 }

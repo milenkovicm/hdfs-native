@@ -76,7 +76,7 @@ impl HdfsRegistry {
         }
     }
 
-    fn get_namenode(&self, path: &str) -> Result<NNScheme, HdfsErr> {
+    fn get_name_node(&self, path: &str) -> Result<NNScheme, HdfsErr> {
         match Url::parse(path) {
             Ok(url) => {
                 if url.scheme() == LOCAL_FS_SCHEME {
@@ -95,7 +95,7 @@ impl HdfsRegistry {
     }
 
     pub fn get(&self, path: &str) -> Result<Arc<HdfsFs>, HdfsErr> {
-        let host_port = self.get_namenode(path)?;
+        let host_port = self.get_name_node(path)?;
 
         let mut map = self.all_fs.lock().unwrap();
 
