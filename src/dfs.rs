@@ -279,6 +279,16 @@ pub struct HdfsFs {
 unsafe impl Send for HdfsFs {}
 unsafe impl Sync for HdfsFs {}
 
+// impl Drop for HdfsFs {
+//     fn drop(&mut self) {
+//         unsafe {
+//             match hdfsDisconnect(self.raw) {
+//                 _ => (),
+//             }
+//         }
+//     }
+// }
+
 impl Debug for HdfsFs {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Hdfs").field("url", &self.url).finish()

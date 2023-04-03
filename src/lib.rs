@@ -23,7 +23,6 @@ pub mod err;
 /// libhdfs3 raw binding APIs
 mod raw;
 pub mod util;
-pub mod walk_dir;
 
 pub use crate::dfs::*;
 pub use crate::err::HdfsErr;
