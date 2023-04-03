@@ -21,7 +21,7 @@
 pub mod dfs;
 pub mod err;
 /// libhdfs3 raw binding APIs
-mod raw;
+pub mod raw;
 pub mod util;
 
 pub use crate::dfs::*;
