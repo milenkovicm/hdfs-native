@@ -10,7 +10,7 @@ mod copy {
 
     #[test]
     #[ignore = "libhdfs3 does not support this operation"]
-    fn should_copy() {
+    fn should_copy_files() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
@@ -30,7 +30,7 @@ mod copy {
 
     #[test]
     #[ignore = "libhdfs3 does not support this operation"]
-    fn should_move() {
+    fn should_move_files() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 

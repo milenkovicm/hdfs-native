@@ -12,7 +12,7 @@ mod e2e {
     const DATA: &str = "1234567890";
 
     #[test]
-    fn should_connect() {
+    fn should_connect_to_name_node() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
@@ -23,7 +23,7 @@ mod e2e {
     }
 
     #[test]
-    fn basic_operations_check() {
+    fn should_support_basic_fs_operations() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
@@ -70,7 +70,7 @@ mod e2e {
     }
 
     #[test]
-    fn read_with_position_check() {
+    fn should_read_with_position() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
@@ -106,7 +106,7 @@ mod e2e {
     }
 
     #[test]
-    fn read_with_position_len_check() {
+    fn should_read_with_position_and_length() {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
