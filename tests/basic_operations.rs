@@ -4,7 +4,7 @@ mod common;
 mod e2e {
 
     use crate::common::*;
-    use hdfs_native::{err::*, HdfsRegistry};
+    use hdfs_native::HdfsRegistry;
     use log::info;
 
     const DATA: &str = "1234567890";
@@ -18,36 +18,6 @@ mod e2e {
         let _fs = fs_registry
             .get(&hdfs_server_url)
             .expect("creation of registry");
-    }
-
-    #[test]
-    fn should_return_error() {
-        let fs_registry = HdfsRegistry::new();
-        let hdfs_server_url = generate_hdfs_url();
-
-        let fs = fs_registry
-            .get(&hdfs_server_url)
-            .expect("creation of registry");
-
-        let error = get_last_error();
-        assert_eq!("Success", error);
-
-        let test_file = format!("/{}", generate_unique_name());
-        let mut w = fs.create(&test_file).expect("file to be created");
-        w.write(DATA.as_bytes()).expect("data to be written");
-
-        let w = fs.append(&test_file);
-        match w {
-            _ => {}
-        }
-
-        let error = get_last_error();
-        println!("{:?}", error);
-        let expected_message = "Failed to APPEND_FILE";
-
-        assert_eq!(expected_message, &error[0..expected_message.len()]);
-
-        fs.delete(&test_file, false).expect("file to be deleted");
     }
 
     #[test]

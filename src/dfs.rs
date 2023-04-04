@@ -223,7 +223,7 @@ impl HdfsFs {
         let file = unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_APPEND, 0, 0, 0) };
 
         if file.is_null() {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -280,7 +280,7 @@ impl HdfsFs {
         };
 
         if file.is_null() {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -297,7 +297,7 @@ impl HdfsFs {
         if block_sz > 0 {
             Ok(block_sz as usize)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -317,7 +317,7 @@ impl HdfsFs {
         let block_sz = unsafe { hdfsGetCapacity(self.raw) };
 
         if block_sz < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(block_sz as usize)
         }
@@ -330,7 +330,7 @@ impl HdfsFs {
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -354,7 +354,7 @@ impl HdfsFs {
         if !ptr.is_null() {
             Ok(BlockHosts { ptr })
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -363,7 +363,7 @@ impl HdfsFs {
         if unsafe { hdfsCreateDirectory(self.raw, to_raw!(path)) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -379,7 +379,7 @@ impl HdfsFs {
             unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_RDONLY, buf_size as c_int, 0, 0) };
 
         if file.is_null() {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -396,7 +396,7 @@ impl HdfsFs {
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -407,7 +407,7 @@ impl HdfsFs {
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -416,7 +416,7 @@ impl HdfsFs {
         let block_sz = unsafe { hdfsGetUsed(self.raw) };
 
         if block_sz < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(block_sz as usize)
         }
@@ -428,7 +428,7 @@ impl HdfsFs {
         let ptr = unsafe { hdfsListDirectory(self.raw, to_raw!(path), &mut entry_num) };
 
         if ptr.is_null() {
-            return Err(HdfsErr::Unknown);
+            return Err(HdfsErr::from_errno());
         }
 
         let shared_ptr = Arc::new(HdfsFileInfoPtr::new_array(ptr, entry_num));
@@ -445,7 +445,7 @@ impl HdfsFs {
         let ptr = unsafe { hdfsGetPathInfo(self.raw, to_raw!(path)) };
 
         if ptr.is_null() {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(FileStatus::new(ptr))
         }
@@ -469,6 +469,16 @@ impl<'a> Drop for HdfsFile<'a> {
     }
 }
 
+impl<'a> Debug for HdfsFile<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HdfsFile")
+            .field("fs", &self.fs)
+            .field("path", &self.path)
+            .field("file", &self.file)
+            .finish()
+    }
+}
+
 impl<'a> HdfsFile<'a> {
     // pub fn from_raw(rw: &RawHdfsFileWrapper, fs: &'a HdfsFs) -> HdfsFile<'a> {
     //     let path = rw.path.clone();
@@ -483,7 +493,7 @@ impl<'a> HdfsFile<'a> {
         if unsafe { hdfsAvailable(self.fs.raw, self.file) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -492,7 +502,7 @@ impl<'a> HdfsFile<'a> {
         if unsafe { hdfsCloseFile(self.fs.raw, self.file) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -534,7 +544,7 @@ impl<'a> HdfsFile<'a> {
         let pos = unsafe { hdfsTell(self.fs.raw, self.file) };
 
         if pos < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(pos as u64)
         }
@@ -552,7 +562,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(read_len as usize)
         }
@@ -574,7 +584,7 @@ impl<'a> HdfsFile<'a> {
         if self.seek(pos as u64) {
             self.read(buf)
         } else {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         }
     }
 
@@ -591,7 +601,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(read_len as usize)
         }
@@ -607,7 +617,7 @@ impl<'a> HdfsFile<'a> {
         let required_len = min(length, buf.len());
 
         if !self.seek(pos as u64) {
-            return Err(HdfsErr::Unknown);
+            return Err(HdfsErr::from_errno());
         }
 
         let read_len = unsafe {
@@ -620,7 +630,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(read_len as usize)
         }
@@ -662,7 +672,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if written_len < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(written_len as usize)
         }
@@ -672,7 +682,7 @@ impl<'a> HdfsFile<'a> {
         let written_len = unsafe { hdfsSync(self.fs.raw, self.file) };
 
         if written_len < 0 {
-            Err(HdfsErr::Unknown)
+            Err(HdfsErr::from_errno())
         } else {
             Ok(())
         }

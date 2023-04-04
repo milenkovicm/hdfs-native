@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use errno::{errno, Errno};
 use std::io::ErrorKind;
 use thiserror::Error;
 
@@ -24,8 +23,11 @@ use crate::from_raw;
 /// Errors which can occur during accessing Hdfs cluster
 #[derive(Error, Debug)]
 pub enum HdfsErr {
-    #[error("Unknown hdfs error")]
+    #[error("Unknown HDFS error")]
     Unknown,
+    /// wrapper around IO error
+    #[error("{0}")]
+    IoError(#[from] std::io::Error),
     /// file path
     #[error("File not found `{0}`")]
     FileNotFound(String),
@@ -40,6 +42,14 @@ pub enum HdfsErr {
     InvalidUrl(String),
 }
 
+impl HdfsErr {
+    /// create error based on `errno` set by the library
+    pub fn from_errno() -> HdfsErr {
+        let e = errno::errno();
+        HdfsErr::IoError(std::io::Error::from_raw_os_error(e.0))
+    }
+}
+
 fn get_error_kind(e: &HdfsErr) -> ErrorKind {
     match e {
         HdfsErr::Unknown => ErrorKind::Other,
@@ -47,18 +57,20 @@ fn get_error_kind(e: &HdfsErr) -> ErrorKind {
         HdfsErr::FileAlreadyExists(_) => ErrorKind::AlreadyExists,
         HdfsErr::CannotConnectToNameNode(_) => ErrorKind::ConnectionRefused,
         HdfsErr::InvalidUrl(_) => ErrorKind::AddrNotAvailable,
+        HdfsErr::IoError(_) => ErrorKind::Other, // we don't care about this one as will explicitly match it in from
     }
 }
 
 impl From<HdfsErr> for std::io::Error {
     fn from(e: HdfsErr) -> std::io::Error {
-        let transformed_kind = get_error_kind(&e);
-        std::io::Error::new(transformed_kind, e)
+        match e {
+            HdfsErr::IoError(e) => e,
+            e => {
+                let transformed_kind = get_error_kind(&e);
+                std::io::Error::new(transformed_kind, e)
+            }
+        }
     }
-}
-
-pub fn get_errno() -> Errno {
-    errno()
 }
 
 pub fn get_last_error() -> &'static str {
