@@ -65,12 +65,13 @@ impl HdfsUtil {
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
     pub fn cp(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
-        unimplemented!("not supported by libhdfs3 library")
-        // let res = unsafe { hdfsCopy(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
+        unimplemented!("Not supported by the libhdfs3 library")
+        // let res = unsafe { crate::raw::hdfsCopy(_src_fs.raw(), to_raw!(_src), _dst_fs.raw(), to_raw!(_dst)) };
 
         // if res == 0 {
         //     Ok(true)
         // } else {
+        //     println!("{:?}", crate::err::get_errno());
         //     Err(HdfsErr::Unknown)
         // }
     }
@@ -83,7 +84,7 @@ impl HdfsUtil {
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
     pub fn mv(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
-        unimplemented!("not supported by libhdfs3 library")
+        unimplemented!("Not supported by the libhdfs3 library")
         // let res = unsafe { hdfsMove(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
 
         // if res == 0 {

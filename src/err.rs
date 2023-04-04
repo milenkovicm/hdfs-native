@@ -15,8 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use errno::{errno, Errno};
 use std::io::ErrorKind;
 use thiserror::Error;
+
+use crate::from_raw;
 
 /// Errors which can occur during accessing Hdfs cluster
 #[derive(Error, Debug)]
@@ -51,5 +54,19 @@ impl From<HdfsErr> for std::io::Error {
     fn from(e: HdfsErr) -> std::io::Error {
         let transformed_kind = get_error_kind(&e);
         std::io::Error::new(transformed_kind, e)
+    }
+}
+
+pub fn get_errno() -> Errno {
+    errno()
+}
+
+pub fn get_last_error() -> &'static str {
+    let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
+
+    if !char_ptr.is_null() {
+        from_raw!(char_ptr)
+    } else {
+        ""
     }
 }
