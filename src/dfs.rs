@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::io::{Read, Write};
 use std::string::String;
 use std::sync::Arc;
 
@@ -696,6 +697,23 @@ impl<'a> HdfsFile<'a> {
     //         Ok(FileStatus::new(self.ptr().clone()))
     //     }
     // }
+}
+
+impl<'a> Write for HdfsFile<'a> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        HdfsFile::write(self, buf).map_err(|e| e.into())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        HdfsFile::flush(self);
+        Ok(())
+    }
+}
+
+impl<'a> Read for HdfsFile<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        HdfsFile::read(self, buf).map_err(|e| e.into())
+    }
 }
 
 //

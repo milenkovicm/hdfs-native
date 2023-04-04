@@ -3,6 +3,8 @@ mod common;
 #[cfg(test)]
 mod e2e {
 
+    use std::io::{Read, Write};
+
     use crate::common::*;
     use hdfs_native::HdfsRegistry;
     use log::info;
@@ -215,5 +217,34 @@ mod e2e {
         assert_eq!(1, list.len());
 
         fs.delete(&test_dir, true).expect("to be deleted");
+    }
+
+    #[test]
+    fn should_implement_read_and_write() {
+        let fs_registry = HdfsRegistry::new();
+        let hdfs_server_url = generate_hdfs_url();
+
+        info!("HDFS Name node to be used: [{}]", hdfs_server_url);
+
+        let fs = fs_registry
+            .get(&hdfs_server_url)
+            .expect("creation of registry");
+
+        let test_file = format!("/{}", generate_unique_name());
+
+        let mut file = fs.create(&test_file).expect("file to be created");
+
+        file.write_all(DATA.as_bytes()).expect("data written");
+
+        // we flush and close file to synch it
+        drop(file);
+
+        let mut file = fs.open(&test_file).expect("file to be open");
+        let mut result = String::new();
+        file.read_to_string(&mut result).expect("to be read");
+
+        assert_eq!(DATA, result);
+
+        fs.delete(&test_file, false).expect("file to be deleted");
     }
 }
