@@ -19,7 +19,6 @@ use std::str;
 
 use crate::dfs::HdfsFs;
 use crate::err::HdfsErr;
-use crate::raw::*;
 
 #[macro_export]
 macro_rules! to_raw {
@@ -65,14 +64,15 @@ impl HdfsUtil {
     /// * ```src``` - The path of source file.
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
-    pub fn copy(src_fs: &HdfsFs, src: &str, dst_fs: &HdfsFs, dst: &str) -> Result<bool, HdfsErr> {
-        let res = unsafe { hdfsCopy(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
+    pub fn cp(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
+        unimplemented!("not supported by libhdfs3 library")
+        // let res = unsafe { hdfsCopy(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
 
-        if res == 0 {
-            Ok(true)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
+        // if res == 0 {
+        //     Ok(true)
+        // } else {
+        //     Err(HdfsErr::Unknown)
+        // }
     }
 
     /// Move file from one filesystem to another.
@@ -82,13 +82,14 @@ impl HdfsUtil {
     /// * ```src``` - The path of source file.
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
-    pub fn mv(src_fs: &HdfsFs, src: &str, dst_fs: &HdfsFs, dst: &str) -> Result<bool, HdfsErr> {
-        let res = unsafe { hdfsMove(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
+    pub fn mv(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
+        unimplemented!("not supported by libhdfs3 library")
+        // let res = unsafe { hdfsMove(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
 
-        if res == 0 {
-            Ok(true)
-        } else {
-            Err(HdfsErr::Unknown)
-        }
+        // if res == 0 {
+        //     Ok(true)
+        // } else {
+        //     Err(HdfsErr::Unknown)
+        // }
     }
 }

@@ -14,7 +14,7 @@ mod e2e {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
-        info!("HDFS Name Note to be used: [{}]", hdfs_server_url);
+        info!("HDFS Name Node to be used: [{}]", hdfs_server_url);
         let _fs = fs_registry
             .get(&hdfs_server_url)
             .expect("creation of registry");
@@ -55,7 +55,7 @@ mod e2e {
         let fs_registry = HdfsRegistry::new();
         let hdfs_server_url = generate_hdfs_url();
 
-        info!("HDFS Name Note to be used: [{}]", hdfs_server_url);
+        info!("HDFS Name Node to be used: [{}]", hdfs_server_url);
         let fs = fs_registry
             .get(&hdfs_server_url)
             .expect("creation of registry");
