@@ -64,7 +64,23 @@ pub struct hdfsReadStatistics {
     pub totalShortCircuitBytesRead: u64,
     pub totalZeroCopyBytesRead: u64,
 }
-
+#[cfg(feature = "compat_lib_hawq")]
+/// hdfsEncryptionFileInfo - Information about an encryption file/directory.
+#[repr(C)]
+pub struct hdfsEncryptionFileInfo {
+    /// the suite of encryption file/directory
+    mSuite: c_int,
+    /// the version of crypto protocol
+    mCryptoProtocolVersion: c_int,
+    /// the key of encryption file/directory
+    mKey: *const c_char,
+    /// the key name of encryption file/directory
+    mKeyName: *const c_char,
+    /// the iv of encryption file/directory
+    mIv: *const c_char,
+    /// the version encryption file/directory
+    mEzKeyVersionName: *const c_char,
+}
 #[repr(C)]
 pub struct hdfsFileInfo {
     /// file or directory
@@ -87,6 +103,9 @@ pub struct hdfsFileInfo {
     pub mPermissions: c_short,
     /// the last access time for the file in seconds
     pub mLastAccess: tTime,
+    #[cfg(feature = "compat_lib_hawq")]
+    /// the encryption info of the file/directory
+    pub hdfsEncryptionFileInfo: *const hdfsEncryptionFileInfo,
 }
 // https://doc.rust-lang.org/nomicon/ffi.html#linking
 

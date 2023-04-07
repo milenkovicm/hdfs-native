@@ -41,5 +41,8 @@ log = "0.4"
 env_logger = "0.10"
 
 [features]
-default = []
+default = ["compat_lib_hawq"]
 tests_start_docker = []
+# to enable compatibility with libhdfs3 maintained by
+# https://github.com/apache/hawq
+compat_lib_hawq = []

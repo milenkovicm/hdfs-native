@@ -256,8 +256,8 @@ impl HdfsFs {
     ) -> Result<HdfsFile<'_>, HdfsErr> {
         self.create_with_params(path, overwrite, 0, 0, 0)
     }
-    // changed visibility to private as buf size has not been respected 
-    // in the library 
+    // changed visibility to private as buf size has not been respected
+    // in the library
     fn create_with_params(
         &self,
         path: &str,
@@ -374,8 +374,8 @@ impl HdfsFs {
     pub fn open(&self, path: &str) -> Result<HdfsFile<'_>, HdfsErr> {
         self.open_with_bufsize(path, 0)
     }
-    // changed visibility to private as buf size has not been respected 
-    // in the library 
+    // changed visibility to private as buf size has not been respected
+    // in the library
     /// open a file to read with a buffer size
     fn open_with_bufsize(&self, path: &str, buf_size: i32) -> Result<HdfsFile<'_>, HdfsErr> {
         let file =
