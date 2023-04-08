@@ -6,7 +6,7 @@ mod e2e {
     use std::io::ErrorKind;
 
     use crate::common::*;
-    use hdfs_native::{get_last_error, HdfsRegistry};
+    use hdfs_native::{HdfsFs, HdfsRegistry};
 
     const DATA: &str = "1234567890";
 
@@ -19,7 +19,7 @@ mod e2e {
             .get(&hdfs_server_url)
             .expect("creation of registry");
 
-        let error = get_last_error();
+        let error = HdfsFs::get_last_error();
         assert_eq!("Success", error);
 
         let test_file = format!("/{}", generate_unique_name());
@@ -31,7 +31,7 @@ mod e2e {
             _ => (),
         }
 
-        let error = get_last_error();
+        let error = HdfsFs::get_last_error();
         println!("{:?}", error);
         let expected_message = "Failed to APPEND_FILE";
 
@@ -49,7 +49,7 @@ mod e2e {
             .get(&hdfs_server_url)
             .expect("creation of registry");
 
-        let error = get_last_error();
+        let error = HdfsFs::get_last_error();
         assert_eq!("Success", error);
 
         let file_does_not_exist = format!("/{}", generate_unique_name());

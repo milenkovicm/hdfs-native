@@ -127,12 +127,3 @@ impl HdfsRegistry {
     }
 }
 
-pub fn get_last_error() -> &'static str {
-    let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
-
-    if !char_ptr.is_null() {
-        from_raw!(char_ptr)
-    } else {
-        ""
-    }
-}
