@@ -19,13 +19,11 @@
 
 /// Rust APIs wrapping libhdfs3 API, providing better semantic and abstraction
 pub mod dfs;
-pub mod err;
 /// libhdfs3 raw binding APIs
 pub mod raw;
 pub mod util;
 
 pub use crate::dfs::*;
-pub use crate::err::HdfsErr;
 pub use crate::util::HdfsUtil;
 
 use crate::raw::{
@@ -33,6 +31,7 @@ use crate::raw::{
 };
 use log::{debug, info};
 use std::collections::HashMap;
+use std::io::{Error, ErrorKind};
 use std::sync::{Arc, Mutex};
 use url::Url;
 
@@ -76,7 +75,7 @@ impl HdfsRegistry {
         }
     }
 
-    fn get_name_node(&self, path: &str) -> Result<NNScheme, HdfsErr> {
+    fn get_name_node(&self, path: &str) -> Result<NNScheme, Error> {
         match Url::parse(path) {
             Ok(url) => {
                 if url.scheme() == LOCAL_FS_SCHEME {
@@ -87,14 +86,14 @@ impl HdfsRegistry {
                         port: url.port().unwrap(),
                     }))
                 } else {
-                    Err(HdfsErr::InvalidUrl(path.to_string()))
+                    Err(ErrorKind::InvalidInput.into())
                 }
             }
-            Err(_) => Err(HdfsErr::InvalidUrl(path.to_string())),
+            Err(_) => Err(ErrorKind::AddrNotAvailable.into()),
         }
     }
 
-    pub fn get(&self, path: &str) -> Result<Arc<HdfsFs>, HdfsErr> {
+    pub fn get(&self, path: &str) -> Result<Arc<HdfsFs>, Error> {
         let host_port = self.get_name_node(path)?;
 
         let mut map = self.all_fs.lock().unwrap();
@@ -117,7 +116,7 @@ impl HdfsRegistry {
             };
 
             if hdfs_fs.is_null() {
-                return Err(HdfsErr::CannotConnectToNameNode(host_port.to_string()));
+                return Err(ErrorKind::AddrNotAvailable.into());
             }
             debug!("Connected to NameNode, url: [{}]", &host_port.to_string());
 
@@ -125,5 +124,15 @@ impl HdfsRegistry {
         });
 
         Ok(entry.clone())
+    }
+}
+
+pub fn get_last_error() -> &'static str {
+    let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
+
+    if !char_ptr.is_null() {
+        from_raw!(char_ptr)
+    } else {
+        ""
     }
 }

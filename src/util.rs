@@ -18,7 +18,7 @@
 use std::str;
 
 use crate::dfs::HdfsFs;
-use crate::err::HdfsErr;
+use std::io::Error;
 
 #[macro_export]
 macro_rules! to_raw {
@@ -64,7 +64,7 @@ impl HdfsUtil {
     /// * ```src``` - The path of source file.
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
-    pub fn cp(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
+    pub fn cp(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, Error> {
         unimplemented!("Not supported by the libhdfs3 library")
         // let res = unsafe { crate::raw::hdfsCopy(_src_fs.raw(), to_raw!(_src), _dst_fs.raw(), to_raw!(_dst)) };
 
@@ -83,7 +83,7 @@ impl HdfsUtil {
     /// * ```src``` - The path of source file.
     /// * ```dstFS``` - The handle to destination filesystem.
     /// * ```dst``` - The path of destination file.
-    pub fn mv(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, HdfsErr> {
+    pub fn mv(_src_fs: &HdfsFs, _src: &str, _dst_fs: &HdfsFs, _dst: &str) -> Result<bool, Error> {
         unimplemented!("Not supported by the libhdfs3 library")
         // let res = unsafe { hdfsMove(src_fs.raw(), to_raw!(src), dst_fs.raw(), to_raw!(dst)) };
 

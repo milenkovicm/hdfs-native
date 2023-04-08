@@ -515,6 +515,7 @@ extern "C" {
     /// 0 on success, -1 on error and sets errno
     pub fn hdfsAvailable(fs: *const hdfsFS, file: *const hdfsFile) -> c_int;
 
+    // TODO: not supported by the underlying library
     /// Copy file from one filesystem to another.
     ///
     /// #### Params
@@ -532,6 +533,7 @@ extern "C" {
         dst: *const c_char,
     ) -> c_int;
 
+    // TODO: not supported by the underlying library
     /// Move file from one filesystem to another.
     ///
     /// #### Params

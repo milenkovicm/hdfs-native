@@ -6,7 +6,7 @@ mod e2e {
     use std::io::ErrorKind;
 
     use crate::common::*;
-    use hdfs_native::{err::*, HdfsRegistry};
+    use hdfs_native::{get_last_error, HdfsRegistry};
 
     const DATA: &str = "1234567890";
 
@@ -54,7 +54,7 @@ mod e2e {
 
         let file_does_not_exist = format!("/{}", generate_unique_name());
         let result = fs.open(&file_does_not_exist);
-        if let Err(hdfs_native::err::HdfsErr::IoError(e)) = result {
+        if let Err(e) = result {
             assert_eq!(ErrorKind::NotFound, e.kind())
         } else {
             assert!(false)

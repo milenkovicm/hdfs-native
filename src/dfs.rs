@@ -15,17 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::raw::*;
+use crate::{from_raw, to_raw};
+use libc::{c_char, c_int, c_short, c_void, time_t};
+use std::cmp::min;
+use std::fmt::{Debug, Formatter};
+use std::io::{Error, ErrorKind};
 use std::io::{Read, Write};
 use std::string::String;
 use std::sync::Arc;
-
-use libc::{c_char, c_int, c_short, c_void, time_t};
-
-use crate::err::HdfsErr;
-use crate::raw::*;
-use crate::{from_raw, to_raw};
-use std::cmp::min;
-use std::fmt::{Debug, Formatter};
 
 /// Options for zero-copy read
 // removed pub visibility as it does not look like library supports it
@@ -216,15 +214,15 @@ impl HdfsFs {
     }
 
     /// Open a file for append
-    pub fn append(&self, path: &str) -> Result<HdfsFile<'_>, HdfsErr> {
+    pub fn append(&self, path: &str) -> Result<HdfsFile<'_>, Error> {
         if !self.exist(path) {
-            return Err(HdfsErr::FileNotFound(path.to_owned()));
+            return Err(ErrorKind::NotFound.into());
         }
 
         let file = unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_APPEND, 0, 0, 0) };
 
         if file.is_null() {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -244,7 +242,7 @@ impl HdfsFs {
     }
 
     #[inline]
-    pub fn create(&self, path: &str) -> Result<HdfsFile<'_>, HdfsErr> {
+    pub fn create(&self, path: &str) -> Result<HdfsFile<'_>, Error> {
         self.create_with_params(path, false, 0, 0, 0)
     }
 
@@ -253,7 +251,7 @@ impl HdfsFs {
         &self,
         path: &str,
         overwrite: bool,
-    ) -> Result<HdfsFile<'_>, HdfsErr> {
+    ) -> Result<HdfsFile<'_>, Error> {
         self.create_with_params(path, overwrite, 0, 0, 0)
     }
     // changed visibility to private as buf size has not been respected
@@ -265,9 +263,9 @@ impl HdfsFs {
         buf_size: i32,
         replica_num: i16,
         block_size: i32,
-    ) -> Result<HdfsFile<'_>, HdfsErr> {
+    ) -> Result<HdfsFile<'_>, Error> {
         if !overwrite && self.exist(path) {
-            return Err(HdfsErr::FileAlreadyExists(path.to_owned()));
+            return Err(ErrorKind::AlreadyExists.into());
         }
 
         let file = unsafe {
@@ -282,7 +280,7 @@ impl HdfsFs {
         };
 
         if file.is_null() {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -293,46 +291,46 @@ impl HdfsFs {
     }
 
     /// Get the default blocksize.
-    pub fn default_blocksize(&self) -> Result<usize, HdfsErr> {
+    pub fn default_blocksize(&self) -> Result<usize, Error> {
         let block_sz = unsafe { hdfsGetDefaultBlockSize(self.raw) };
 
         if block_sz > 0 {
             Ok(block_sz as usize)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// Get the default blocksize at the filesystem indicated by a given path.
-    // pub fn block_size(&self, path: &str) -> Result<usize, HdfsErr> {
+    // pub fn block_size(&self, path: &str) -> Result<usize, Error> {
     //     let block_sz = unsafe { hdfsGetDefaultBlockSizeAtPath(self.raw, to_raw!(path)) };
 
     //     if block_sz > 0 {
     //         Ok(block_sz as usize)
     //     } else {
-    //         Err(HdfsErr::Unknown)
+    //         Err(Error::Unknown)
     //     }
     // }
 
     /// Return the raw capacity of the filesystem.
-    pub fn capacity(&self) -> Result<usize, HdfsErr> {
+    pub fn capacity(&self) -> Result<usize, Error> {
         let block_sz = unsafe { hdfsGetCapacity(self.raw) };
 
         if block_sz < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(block_sz as usize)
         }
     }
 
     /// Delete file.
-    pub fn delete(&self, path: &str, recursive: bool) -> Result<bool, HdfsErr> {
+    pub fn delete(&self, path: &str, recursive: bool) -> Result<bool, Error> {
         let res = unsafe { hdfsDelete(self.raw, to_raw!(path), recursive as c_int) };
 
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
@@ -345,44 +343,39 @@ impl HdfsFs {
     /// pos & blocksize) of a file is stored. The last element in the array
     /// is NULL. Due to replication, a single block could be present on
     /// multiple hosts.
-    pub fn get_hosts(
-        &self,
-        path: &str,
-        start: usize,
-        length: usize,
-    ) -> Result<BlockHosts, HdfsErr> {
+    pub fn get_hosts(&self, path: &str, start: usize, length: usize) -> Result<BlockHosts, Error> {
         let ptr = unsafe { hdfsGetHosts(self.raw, to_raw!(path), start as i64, length as i64) };
 
         if !ptr.is_null() {
             Ok(BlockHosts { ptr })
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// create a directory
-    pub fn mkdir(&self, path: &str) -> Result<bool, HdfsErr> {
+    pub fn mkdir(&self, path: &str) -> Result<bool, Error> {
         if unsafe { hdfsCreateDirectory(self.raw, to_raw!(path)) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// open a file to read
     #[inline]
-    pub fn open(&self, path: &str) -> Result<HdfsFile<'_>, HdfsErr> {
+    pub fn open(&self, path: &str) -> Result<HdfsFile<'_>, Error> {
         self.open_with_bufsize(path, 0)
     }
     // changed visibility to private as buf size has not been respected
     // in the library
     /// open a file to read with a buffer size
-    fn open_with_bufsize(&self, path: &str, buf_size: i32) -> Result<HdfsFile<'_>, HdfsErr> {
+    fn open_with_bufsize(&self, path: &str, buf_size: i32) -> Result<HdfsFile<'_>, Error> {
         let file =
             unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_RDONLY, buf_size as c_int, 0, 0) };
 
         if file.is_null() {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(HdfsFile {
                 fs: self,
@@ -393,45 +386,45 @@ impl HdfsFs {
     }
 
     /// Set the replication of the specified file to the supplied value
-    pub fn set_replication(&self, path: &str, num: i16) -> Result<bool, HdfsErr> {
+    pub fn set_replication(&self, path: &str, num: i16) -> Result<bool, Error> {
         let res = unsafe { hdfsSetReplication(self.raw, to_raw!(path), num) };
 
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// Rename file.
-    pub fn rename(&self, old_path: &str, new_path: &str) -> Result<bool, HdfsErr> {
+    pub fn rename(&self, old_path: &str, new_path: &str) -> Result<bool, Error> {
         let res = unsafe { hdfsRename(self.raw, to_raw!(old_path), to_raw!(new_path)) };
 
         if res == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// Return the total raw size of all files in the filesystem.
-    pub fn used(&self) -> Result<usize, HdfsErr> {
+    pub fn used(&self) -> Result<usize, Error> {
         let block_sz = unsafe { hdfsGetUsed(self.raw) };
 
         if block_sz < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(block_sz as usize)
         }
     }
 
-    pub fn list_status(&self, path: &str) -> Result<Vec<FileStatus>, HdfsErr> {
+    pub fn list_status(&self, path: &str) -> Result<Vec<FileStatus>, Error> {
         let mut entry_num: c_int = 0;
 
         let ptr = unsafe { hdfsListDirectory(self.raw, to_raw!(path), &mut entry_num) };
 
         if ptr.is_null() {
-            return Err(HdfsErr::from_errno());
+            return Err(Error::last_os_error());
         }
 
         let shared_ptr = Arc::new(HdfsFileInfoPtr::new_array(ptr, entry_num));
@@ -444,11 +437,11 @@ impl HdfsFs {
         Ok(list)
     }
 
-    pub fn get_file_status(&self, path: &str) -> Result<FileStatus, HdfsErr> {
+    pub fn get_file_status(&self, path: &str) -> Result<FileStatus, Error> {
         let ptr = unsafe { hdfsGetPathInfo(self.raw, to_raw!(path)) };
 
         if ptr.is_null() {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(FileStatus::new(ptr))
         }
@@ -492,20 +485,20 @@ impl<'a> HdfsFile<'a> {
     //     }
     // }
 
-    pub fn available(&self) -> Result<bool, HdfsErr> {
+    pub fn available(&self) -> Result<bool, Error> {
         if unsafe { hdfsAvailable(self.fs.raw, self.file) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// Close the opened file
-    fn close(&self) -> Result<bool, HdfsErr> {
+    fn close(&self) -> Result<bool, Error> {
         if unsafe { hdfsCloseFile(self.fs.raw, self.file) } == 0 {
             Ok(true)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
@@ -543,18 +536,18 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Get the current offset in the file, in bytes.
-    pub fn pos(&self) -> Result<u64, HdfsErr> {
+    pub fn pos(&self) -> Result<u64, Error> {
         let pos = unsafe { hdfsTell(self.fs.raw, self.file) };
 
         if pos < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(pos as u64)
         }
     }
 
     /// Read data from an open file.
-    pub fn read(&self, buf: &mut [u8]) -> Result<usize, HdfsErr> {
+    pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let read_len = unsafe {
             hdfsRead(
                 self.fs.raw,
@@ -565,14 +558,14 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(read_len as usize)
         }
     }
 
     /// Positional read of data from an open file.
-    pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<usize, HdfsErr> {
+    pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<usize, Error> {
         // let read_len = unsafe {
         //     hdfsPread(
         //         self.fs.raw,
@@ -587,12 +580,12 @@ impl<'a> HdfsFile<'a> {
         if self.seek(pos as u64) {
             self.read(buf)
         } else {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         }
     }
 
     /// Read data from an open file.
-    pub fn read_length(&self, buf: &mut [u8], length: usize) -> Result<usize, HdfsErr> {
+    pub fn read_length(&self, buf: &mut [u8], length: usize) -> Result<usize, Error> {
         let required_len = min(length, buf.len());
         let read_len = unsafe {
             hdfsRead(
@@ -604,7 +597,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(read_len as usize)
         }
@@ -616,11 +609,11 @@ impl<'a> HdfsFile<'a> {
         pos: i64,
         buf: &mut [u8],
         length: usize,
-    ) -> Result<usize, HdfsErr> {
+    ) -> Result<usize, Error> {
         let required_len = min(length, buf.len());
 
         if !self.seek(pos as u64) {
-            return Err(HdfsErr::from_errno());
+            return Err(Error::last_os_error());
         }
 
         let read_len = unsafe {
@@ -633,7 +626,7 @@ impl<'a> HdfsFile<'a> {
         };
 
         if read_len < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(read_len as usize)
         }
@@ -645,7 +638,7 @@ impl<'a> HdfsFile<'a> {
     /// Perform a byte buffer read. If possible, this will be a zero-copy
     /// (mmap) read.
     // #[allow(dead_code)]
-    // fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, HdfsErr> {
+    // fn read_zc(&'a self, opts: &RzOptions, max_len: i32) -> Result<RzBuffer<'a>, Error> {
     //     let buf: *const hadoopRzBuffer = unsafe { hadoopReadZero(self.file, opts.ptr, max_len) };
     //
     //     if !buf.is_null() {
@@ -654,7 +647,7 @@ impl<'a> HdfsFile<'a> {
     //             ptr: buf,
     //         })
     //     } else {
-    //         Err(HdfsErr::Unknown)
+    //         Err(Error::Unknown)
     //     }
     // }
 
@@ -664,7 +657,7 @@ impl<'a> HdfsFile<'a> {
     }
 
     /// Write data into an open file.
-    pub fn write(&mut self, buf: &[u8]) -> Result<usize, HdfsErr> {
+    pub fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
         let written_len = unsafe {
             hdfsWrite(
                 self.fs.raw,
@@ -675,26 +668,26 @@ impl<'a> HdfsFile<'a> {
         };
 
         if written_len < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(written_len as usize)
         }
     }
 
-    pub fn sync(&mut self) -> Result<(), HdfsErr> {
+    pub fn sync(&mut self) -> Result<(), Error> {
         let written_len = unsafe { hdfsSync(self.fs.raw, self.file) };
 
         if written_len < 0 {
-            Err(HdfsErr::from_errno())
+            Err(Error::last_os_error())
         } else {
             Ok(())
         }
     }
     // consider adding it
     //
-    // pub fn get_file_status(&self) -> Result<FileStatus, HdfsErr> {
+    // pub fn get_file_status(&self) -> Result<FileStatus, Error> {
     //     if self. ptr().is_null() {
-    //         Err(HdfsErr::Unknown)
+    //         Err(Error::Unknown)
     //     } else {
     //         Ok(FileStatus::new(self.ptr().clone()))
     //     }
@@ -703,7 +696,7 @@ impl<'a> HdfsFile<'a> {
 
 impl<'a> Write for HdfsFile<'a> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        HdfsFile::write(self, buf).map_err(|e| e.into())
+        HdfsFile::write(self, buf)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -714,7 +707,7 @@ impl<'a> Write for HdfsFile<'a> {
 
 impl<'a> Read for HdfsFile<'a> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        HdfsFile::read(self, buf).map_err(|e| e.into())
+        HdfsFile::read(self, buf)
     }
 }
 
@@ -768,23 +761,23 @@ impl<'a> Read for HdfsFile<'a> {
 //         }
 //     }
 
-//     pub fn skip_checksum(&self, skip: bool) -> Result<bool, HdfsErr> {
+//     pub fn skip_checksum(&self, skip: bool) -> Result<bool, Error> {
 //         let res = unsafe { hadoopRzOptionsSetSkipChecksum(self.ptr, b2i!(skip)) };
 
 //         if res == 0 {
 //             Ok(true)
 //         } else {
-//             Err(HdfsErr::Unknown)
+//             Err(Error::Unknown)
 //         }
 //     }
 
-//     pub fn set_bytebuffer_pool(&self, class_name: &str) -> Result<bool, HdfsErr> {
+//     pub fn set_bytebuffer_pool(&self, class_name: &str) -> Result<bool, Error> {
 //         let res = unsafe { hadoopRzOptionsSetByteBufferPool(self.ptr, to_raw!(class_name)) };
 
 //         if res == 0 {
 //             Ok(true)
 //         } else {
-//             Err(HdfsErr::Unknown)
+//             Err(Error::Unknown)
 //         }
 //     }
 // }
@@ -814,18 +807,18 @@ impl<'a> Read for HdfsFile<'a> {
 //     }
 
 //     /// Get a pointer to the raw buffer returned from zero-copy read.
-//     pub fn as_ptr(&self) -> Result<*const u8, HdfsErr> {
+//     pub fn as_ptr(&self) -> Result<*const u8, Error> {
 //         let ptr = unsafe { hadoopRzBufferGet(self.ptr) };
 
 //         if !ptr.is_null() {
 //             Ok(ptr as *const u8)
 //         } else {
-//             Err(HdfsErr::Unknown)
+//             Err(Error::Unknown)
 //         }
 //     }
 
 //     /// Get a Slice transformed from a raw buffer
-//     pub fn as_slice(&'a self) -> Result<&[u8], HdfsErr> {
+//     pub fn as_slice(&'a self) -> Result<&[u8], Error> {
 //         let ptr = unsafe { hadoopRzBufferGet(self.ptr) as *const u8 };
 
 //         let len = unsafe { hadoopRzBufferLength(self.ptr) as usize };
@@ -833,7 +826,7 @@ impl<'a> Read for HdfsFile<'a> {
 //         if !ptr.is_null() {
 //             Ok(unsafe { mem::transmute(slice::from_raw_parts(ptr, len)) })
 //         } else {
-//             Err(HdfsErr::Unknown)
+//             Err(Error::Unknown)
 //         }
 //     }
 // }
