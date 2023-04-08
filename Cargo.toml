@@ -28,6 +28,7 @@ path = "src/lib.rs"
 libc = "0.2"
 log = "0.4"
 url = "2"
+libhdfs3_sys = { git = "https://github.com/milenkovicm/libhdfs3-sys.git"}
 
 [dev-dependencies]
 testcontainers = "0.14"
@@ -37,6 +38,7 @@ once_cell = "1.17"
 rusty_ulid = "2.0"
 log = "0.4"
 env_logger = "0.10"
+
 
 [features]
 default = ["compat_lib_hawq"]

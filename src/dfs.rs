@@ -15,9 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::raw::*;
+//use crate::raw::*;
 use crate::{from_raw, to_raw};
-use libc::{c_char, c_int, c_short, c_void, time_t};
+use libc::{c_char, c_int, c_short, c_void, time_t, O_RDONLY, O_WRONLY};
+use libhdfs3_sys::*;
 use std::cmp::min;
 use std::fmt::{Debug, Formatter};
 use std::io::{Error, ErrorKind};
@@ -30,7 +31,7 @@ use std::sync::Arc;
 //
 /// Includes host names where a particular block of a file is stored.
 pub struct BlockHosts {
-    ptr: *const *const *const c_char,
+    ptr: *mut *mut *mut c_char,
 }
 
 impl Drop for BlockHosts {
@@ -40,7 +41,7 @@ impl Drop for BlockHosts {
 }
 
 struct HdfsFileInfoPtr {
-    pub ptr: *const hdfsFileInfo,
+    pub ptr: *mut hdfsFileInfo,
     pub len: i32,
 }
 
@@ -55,11 +56,11 @@ unsafe impl Send for HdfsFileInfoPtr {}
 unsafe impl Sync for HdfsFileInfoPtr {}
 
 impl HdfsFileInfoPtr {
-    fn new(ptr: *const hdfsFileInfo) -> HdfsFileInfoPtr {
+    fn new(ptr: *mut hdfsFileInfo) -> HdfsFileInfoPtr {
         HdfsFileInfoPtr { ptr, len: 1 }
     }
 
-    pub fn new_array(ptr: *const hdfsFileInfo, len: i32) -> HdfsFileInfoPtr {
+    pub fn new_array(ptr: *mut hdfsFileInfo, len: i32) -> HdfsFileInfoPtr {
         HdfsFileInfoPtr { ptr, len }
     }
 }
@@ -73,7 +74,7 @@ pub struct FileStatus {
 impl FileStatus {
     #[inline]
     /// create FileStatus from *const hdfsFileInfo
-    fn new(ptr: *const hdfsFileInfo) -> FileStatus {
+    fn new(ptr: *mut hdfsFileInfo) -> FileStatus {
         FileStatus {
             raw: Arc::new(HdfsFileInfoPtr::new(ptr)),
             idx: 0,
@@ -174,7 +175,7 @@ impl FileStatus {
 // #[derive(Clone)]
 pub struct HdfsFs {
     pub url: String,
-    raw: *const hdfsFS,
+    raw: hdfsFS,
 }
 
 unsafe impl Send for HdfsFs {}
@@ -197,7 +198,7 @@ impl Debug for HdfsFs {
 impl HdfsFs {
     /// create HdfsFs instance. Please use HdfsFsCache rather than using this API directly.
     #[inline]
-    pub(crate) fn new(url: String, raw: *const hdfsFS) -> HdfsFs {
+    pub(crate) fn new(url: String, raw: hdfsFS) -> HdfsFs {
         HdfsFs { url, raw }
     }
 
@@ -209,7 +210,7 @@ impl HdfsFs {
 
     /// Get a raw pointer of JNI API's HdfsFs
     #[inline]
-    pub fn raw(&self) -> *const hdfsFS {
+    pub fn raw(&self) -> hdfsFS {
         self.raw
     }
 
@@ -219,7 +220,16 @@ impl HdfsFs {
             return Err(ErrorKind::NotFound.into());
         }
 
-        let file = unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_APPEND, 0, 0, 0) };
+        let file = unsafe {
+            hdfsOpenFile(
+                self.raw,
+                to_raw!(path),
+                libc::O_WRONLY | libc::O_APPEND,
+                0,
+                0,
+                0,
+            )
+        };
 
         if file.is_null() {
             Err(Error::last_os_error())
@@ -262,7 +272,7 @@ impl HdfsFs {
         overwrite: bool,
         buf_size: i32,
         replica_num: i16,
-        block_size: i32,
+        block_size: i64,
     ) -> Result<HdfsFile<'_>, Error> {
         if !overwrite && self.exist(path) {
             return Err(ErrorKind::AlreadyExists.into());
@@ -448,8 +458,8 @@ impl HdfsFs {
     }
 
     pub fn get_last_error() -> &'static str {
-        let char_ptr = unsafe { crate::raw::hdfsGetLastError() };
-    
+        let char_ptr = unsafe { libhdfs3_sys::hdfsGetLastError() };
+
         if !char_ptr.is_null() {
             from_raw!(char_ptr)
         } else {
@@ -462,7 +472,7 @@ impl HdfsFs {
 pub struct HdfsFile<'a> {
     fs: &'a HdfsFs,
     path: String,
-    file: *const hdfsFile,
+    file: hdfsFile,
 }
 
 impl<'a> Drop for HdfsFile<'a> {
@@ -486,7 +496,6 @@ impl<'a> Debug for HdfsFile<'a> {
 }
 
 impl<'a> HdfsFile<'a> {
-
     pub fn available(&self) -> Result<bool, Error> {
         if unsafe { hdfsAvailable(self.fs.raw, self.file) } == 0 {
             Ok(true)

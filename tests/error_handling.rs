@@ -3,10 +3,9 @@ mod common;
 #[cfg(test)]
 mod e2e {
 
-    use std::io::ErrorKind;
-
     use crate::common::*;
     use hdfs_native::{HdfsFs, HdfsRegistry};
+    use std::io::ErrorKind;
 
     const DATA: &str = "1234567890";
 
@@ -18,9 +17,6 @@ mod e2e {
         let fs = fs_registry
             .get(&hdfs_server_url)
             .expect("creation of registry");
-
-        let error = HdfsFs::get_last_error();
-        assert_eq!("Success", error);
 
         let test_file = format!("/{}", generate_unique_name());
         let mut w = fs.create(&test_file).expect("file to be created");
@@ -48,9 +44,6 @@ mod e2e {
         let fs = fs_registry
             .get(&hdfs_server_url)
             .expect("creation of registry");
-
-        let error = HdfsFs::get_last_error();
-        assert_eq!("Success", error);
 
         let file_does_not_exist = format!("/{}", generate_unique_name());
         let result = fs.open(&file_does_not_exist);

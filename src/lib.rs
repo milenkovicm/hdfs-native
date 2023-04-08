@@ -19,16 +19,10 @@
 
 /// Rust APIs wrapping libhdfs3 API, providing better semantic and abstraction
 pub mod dfs;
-/// libhdfs3 raw binding APIs
-pub mod raw;
 pub mod util;
-
 pub use crate::dfs::*;
 pub use crate::util::HdfsUtil;
-
-use crate::raw::{
-    hdfsBuilderConnect, hdfsBuilderSetNameNode, hdfsBuilderSetNameNodePort, hdfsFS, hdfsNewBuilder,
-};
+use libhdfs3_sys::*;
 use log::{debug, info};
 use std::collections::HashMap;
 use std::io::{Error, ErrorKind};
@@ -99,8 +93,9 @@ impl HdfsRegistry {
         let mut map = self.all_fs.lock().unwrap();
 
         let entry: &mut Arc<HdfsFs> = map.entry(host_port.to_string()).or_insert({
-            let hdfs_fs: *const hdfsFS = unsafe {
-                let hdfs_builder = hdfsNewBuilder();
+            let hdfs_fs: hdfsFS = unsafe {
+                let hdfs_builder: *mut hdfsBuilder = hdfsNewBuilder();
+                hdfsBuilderConnect(hdfs_builder);
                 match host_port {
                     NNScheme::Local => {}
                     NNScheme::Remote(ref hp) => {
@@ -112,6 +107,7 @@ impl HdfsRegistry {
                     "Connecting to NameNode ... url: [{}]",
                     &host_port.to_string()
                 );
+
                 hdfsBuilderConnect(hdfs_builder)
             };
 
@@ -126,4 +122,3 @@ impl HdfsRegistry {
         Ok(entry.clone())
     }
 }
-
