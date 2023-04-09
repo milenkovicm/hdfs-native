@@ -28,7 +28,8 @@ path = "src/lib.rs"
 libc = "0.2"
 log = "0.4"
 url = "2"
-libhdfs3_sys = { git = "https://github.com/milenkovicm/libhdfs3-sys.git"}
+#libhdfs3_sys = { git = "https://github.com/milenkovicm/libhdfs3-sys.git"}
+libhdfs3_sys = { path = "../libhdfs3-sys/"}
 
 [dev-dependencies]
 testcontainers = "0.14"

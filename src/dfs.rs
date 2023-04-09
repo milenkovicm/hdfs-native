@@ -17,7 +17,7 @@
 
 //use crate::raw::*;
 use crate::{from_raw, to_raw};
-use libc::{c_char, c_int, c_short, c_void, time_t, O_RDONLY, O_WRONLY};
+use libc::{c_char, c_int, c_short, c_void, time_t};
 use libhdfs3_sys::*;
 use std::cmp::min;
 use std::fmt::{Debug, Formatter};
@@ -220,16 +220,7 @@ impl HdfsFs {
             return Err(ErrorKind::NotFound.into());
         }
 
-        let file = unsafe {
-            hdfsOpenFile(
-                self.raw,
-                to_raw!(path),
-                libc::O_WRONLY | libc::O_APPEND,
-                0,
-                0,
-                0,
-            )
-        };
+        let file = unsafe { hdfsOpenFile(self.raw, to_raw!(path), HDFS_APPEND, 0, 0, 0) };
 
         if file.is_null() {
             Err(Error::last_os_error())
@@ -282,7 +273,7 @@ impl HdfsFs {
             hdfsOpenFile(
                 self.raw,
                 to_raw!(path),
-                O_WRONLY,
+                HDFS_WRITE,
                 buf_size as c_int,
                 replica_num as c_short,
                 block_size,
@@ -382,7 +373,7 @@ impl HdfsFs {
     /// open a file to read with a buffer size
     fn open_with_bufsize(&self, path: &str, buf_size: i32) -> Result<HdfsFile<'_>, Error> {
         let file =
-            unsafe { hdfsOpenFile(self.raw, to_raw!(path), O_RDONLY, buf_size as c_int, 0, 0) };
+            unsafe { hdfsOpenFile(self.raw, to_raw!(path), HDFS_READ, buf_size as c_int, 0, 0) };
 
         if file.is_null() {
             Err(Error::last_os_error())

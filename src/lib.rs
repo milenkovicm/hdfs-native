@@ -29,6 +29,10 @@ use std::io::{Error, ErrorKind};
 use std::sync::{Arc, Mutex};
 use url::Url;
 
+pub mod raw {
+    pub use libhdfs3_sys::*;
+}
+
 static LOCAL_FS_SCHEME: &str = "file";
 
 /// HdfsRegistry which stores seen HdfsFs instances.
