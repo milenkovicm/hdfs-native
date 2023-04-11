@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//use crate::raw::*;
 use crate::{from_raw, to_raw};
 use libc::{c_char, c_int, c_short, c_void, time_t};
 use libhdfs3_sys::*;
@@ -26,9 +25,6 @@ use std::io::{Read, Write};
 use std::string::String;
 use std::sync::Arc;
 
-/// Options for zero-copy read
-// removed pub visibility as it does not look like library supports it
-//
 /// Includes host names where a particular block of a file is stored.
 pub struct BlockHosts {
     ptr: *mut *mut *mut c_char,
@@ -171,7 +167,7 @@ impl FileStatus {
 ///
 
 // we have not opted for clone in this case as it would make deallocation
-// much harder to track.
+// impossible to track.
 // #[derive(Clone)]
 pub struct HdfsFs {
     pub url: String,
@@ -209,10 +205,10 @@ impl HdfsFs {
     }
 
     /// Get a raw pointer of JNI API's HdfsFs
-    #[inline]
-    pub fn raw(&self) -> hdfsFS {
-        self.raw
-    }
+    // #[inline]
+    // pub fn raw(&self) -> &hdfsFS {
+    //     self.raw
+    // }
 
     /// Open a file for append
     pub fn append(&self, path: &str) -> Result<HdfsFile<'_>, Error> {
@@ -301,17 +297,6 @@ impl HdfsFs {
             Err(Error::last_os_error())
         }
     }
-
-    /// Get the default blocksize at the filesystem indicated by a given path.
-    // pub fn block_size(&self, path: &str) -> Result<usize, Error> {
-    //     let block_sz = unsafe { hdfsGetDefaultBlockSizeAtPath(self.raw, to_raw!(path)) };
-
-    //     if block_sz > 0 {
-    //         Ok(block_sz as usize)
-    //     } else {
-    //         Err(Error::Unknown)
-    //     }
-    // }
 
     /// Return the raw capacity of the filesystem.
     pub fn capacity(&self) -> Result<usize, Error> {
