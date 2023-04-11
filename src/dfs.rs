@@ -636,15 +636,10 @@ impl<'a> HdfsFile<'a> {
             Ok(())
         }
     }
-    // consider adding it
-    //
-    // pub fn get_file_status(&self) -> Result<FileStatus, Error> {
-    //     if self. ptr().is_null() {
-    //         Err(Error::Unknown)
-    //     } else {
-    //         Ok(FileStatus::new(self.ptr().clone()))
-    //     }
-    // }
+    
+    pub fn get_file_status(&self) -> Result<FileStatus, Error> {
+        self.fs.get_file_status(&self.path)
+    }
 }
 
 impl<'a> Write for HdfsFile<'a> {
