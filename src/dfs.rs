@@ -47,7 +47,7 @@ impl Drop for HdfsFileInfoPtr {
     }
 }
 
-// TODO: I'm not sure about this part, fingers crossed it will be ok
+// this should be ok
 unsafe impl Send for HdfsFileInfoPtr {}
 unsafe impl Sync for HdfsFileInfoPtr {}
 
@@ -199,17 +199,18 @@ impl HdfsFs {
         HdfsFs { url, raw }
     }
 
+    /// Do not use, as it might leak reference to hdfsFs
+    /// its just there temporary 
+    #[inline]
+    pub fn raw(&self) -> hdfsFS {
+        self.raw
+    }
+
     /// Get HDFS namenode url
     #[inline]
     pub fn url(&self) -> &str {
         &self.url
     }
-
-    /// Get a raw pointer of JNI API's HdfsFs
-    // #[inline]
-    // pub fn raw(&self) -> &hdfsFS {
-    //     self.raw
-    // }
 
     /// Open a file for append
     pub fn append(&self, path: &str) -> Result<HdfsFile<'_>, Error> {
@@ -445,6 +446,7 @@ impl HdfsFs {
     }
 }
 
+
 /// open hdfs file
 pub struct HdfsFile<'a> {
     fs: &'a HdfsFs,
@@ -547,17 +549,6 @@ impl<'a> HdfsFile<'a> {
 
     /// Positional read of data from an open file.
     pub fn read_with_pos(&self, pos: i64, buf: &mut [u8]) -> Result<usize, Error> {
-        // let read_len = unsafe {
-        //     hdfsPread(
-        //         self.fs.raw,
-        //         self.file,
-        //         pos as tOffset,
-        //         buf.as_ptr() as *mut c_void,
-        //         buf.len() as tSize,
-        //     )
-        // };
-        // let seek_result = self.seek(pos as u64);
-
         if self.seek(pos as u64) {
             self.read(buf)
         } else {
