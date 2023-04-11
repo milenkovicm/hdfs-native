@@ -163,6 +163,7 @@ impl FileStatus {
     }
 }
 
+///
 /// Hdfs Filesystem
 ///
 
@@ -499,13 +500,6 @@ impl<'a> HdfsFile<'a> {
     pub fn hflush(&mut self) -> bool {
         (unsafe { hdfsHFlush(self.fs.raw, self.file) }) == 0
     }
-
-    /// Similar to posix fsync, Flush out the data in client's
-    /// user buffer. all the way to the disk device (but the disk may have
-    /// it in its cache).
-    // pub fn hsync(&self) -> bool {
-    //     (unsafe { hdfsHSync(self.fs.raw, self.file) }) == 0
-    // }
 
     /// Determine if a file is open for read.
     pub fn is_readable(&self) -> bool {
