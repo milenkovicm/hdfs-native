@@ -87,7 +87,7 @@ impl HdfsRegistry {
                     Err(ErrorKind::InvalidInput.into())
                 }
             }
-            Err(_) => Err(ErrorKind::AddrNotAvailable.into()),
+            Err(_) => Err(Error::last_os_error()),
         }
     }
 
@@ -116,7 +116,7 @@ impl HdfsRegistry {
             };
 
             if hdfs_fs.is_null() {
-                return Err(ErrorKind::AddrNotAvailable.into());
+                return Err(Error::last_os_error());
             }
             debug!("Connected to NameNode, url: [{}]", &host_port.to_string());
 

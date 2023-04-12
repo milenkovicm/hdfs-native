@@ -200,13 +200,13 @@ impl HdfsFs {
     }
 
     /// Do not use, as it might leak reference to hdfsFs
-    /// its just there temporary 
+    /// its just there temporary
     #[inline]
     pub fn raw(&self) -> hdfsFS {
         self.raw
     }
 
-    /// Get HDFS namenode url
+    /// Get HDFS name node url
     #[inline]
     pub fn url(&self) -> &str {
         &self.url
@@ -446,7 +446,6 @@ impl HdfsFs {
     }
 }
 
-
 /// open hdfs file
 pub struct HdfsFile<'a> {
     fs: &'a HdfsFs,
@@ -636,7 +635,7 @@ impl<'a> HdfsFile<'a> {
             Ok(())
         }
     }
-    
+
     pub fn get_file_status(&self) -> Result<FileStatus, Error> {
         self.fs.get_file_status(&self.path)
     }
