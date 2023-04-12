@@ -289,14 +289,14 @@ impl HdfsFs {
         }
     }
 
-    /// Get the default blocksize.
+    /// Get the default block size.
     pub fn default_block_size(&self) -> Result<usize, Error> {
         let block_sz = unsafe { hdfsGetDefaultBlockSize(self.raw) };
 
-        if block_sz > 0 {
-            Ok(block_sz as usize)
-        } else {
+        if block_sz < 0 {
             Err(Error::last_os_error())
+        } else {
+            Ok(block_sz as usize)
         }
     }
 
