@@ -87,42 +87,117 @@ impl HdfsRegistry {
                     Err(ErrorKind::InvalidInput.into())
                 }
             }
-            Err(_) => Err(Error::last_os_error()),
+            Err(_) => Err(ErrorKind::InvalidInput.into()),
         }
     }
 
     pub fn get(&self, path: &str) -> Result<Arc<HdfsFs>, Error> {
+        debug!("fs get for path: [{}]", path);
         let host_port = self.get_name_node(path)?;
-
         let mut map = self.all_fs.lock().unwrap();
 
         let entry: &mut Arc<HdfsFs> = map.entry(host_port.to_string()).or_insert({
-            let hdfs_fs: hdfsFS = unsafe {
-                let hdfs_builder: *mut hdfsBuilder = hdfsNewBuilder();
-                hdfsBuilderConnect(hdfs_builder);
-                match host_port {
-                    NNScheme::Local => {}
-                    NNScheme::Remote(ref hp) => {
-                        hdfsBuilderSetNameNode(hdfs_builder, to_raw!(&*hp.host));
-                        hdfsBuilderSetNameNodePort(hdfs_builder, hp.port);
-                    }
+            debug!("fs get for path: [{}] ... creating new FS", path);
+            let mut builder = HdfsBuilder::builder();
+            match host_port {
+                NNScheme::Local => return Err(ErrorKind::Unsupported.into()),
+                NNScheme::Remote(ref hp) => {
+                    builder.set_name_node(&hp.host);
+                    builder.set_name_port(hp.port);
                 }
-                info!(
-                    "Connecting to NameNode ... url: [{}]",
-                    &host_port.to_string()
-                );
-
-                hdfsBuilderConnect(hdfs_builder)
-            };
-
-            if hdfs_fs.is_null() {
-                return Err(Error::last_os_error());
             }
-            debug!("Connected to NameNode, url: [{}]", &host_port.to_string());
-
-            Arc::new(HdfsFs::new(host_port.to_string(), hdfs_fs))
+            let fs = builder.connect()?;
+            info!("fs get for path: [{}] ... connected", path);
+            Arc::new(fs)
         });
 
         Ok(entry.clone())
+    }
+}
+
+pub struct HdfsBuilder {
+    builder: *mut hdfsBuilder,
+    host: String,
+    port: u16,
+}
+
+impl HdfsBuilder {
+    pub fn builder() -> Self {
+        let builder: *mut hdfsBuilder = unsafe { hdfsNewBuilder() };
+        let host = "default".to_string();
+        let port = 0;
+        Self { builder, host, port }
+    }
+
+    pub fn connect_name_node(host: &str, port: u16 ) -> Result<HdfsFs, Error> {
+        let hdfs_fs = unsafe {
+            hdfsConnectNewInstance(to_raw!(host), port)
+        };
+
+        if hdfs_fs.is_null() {
+            Err(Error::last_os_error())
+        } else {
+            let host_port = format!("{}:{}", host, port);
+            Ok(HdfsFs::new(host_port, hdfs_fs))
+        }
+    }
+
+    pub fn connect_name_node_as_user(host: &str, port: u16, user: &str ) -> Result<HdfsFs, Error> {
+        let hdfs_fs = unsafe {
+            hdfsConnectAsUserNewInstance(to_raw!(host), port, to_raw!(user))
+        };
+
+        if hdfs_fs.is_null() {
+            Err(Error::last_os_error())
+        } else {
+            let host_port = format!("{}:{}", host, port);
+            Ok(HdfsFs::new(host_port, hdfs_fs))
+        }
+    }
+
+    pub fn set_name_node_port(&mut self, host: &str, port: u16) {
+        self.host = host.to_string();
+        self.port = port;
+        unsafe {
+            hdfsBuilderSetNameNode(self.builder, to_raw!(host));
+            hdfsBuilderSetNameNodePort(self.builder, port);
+        }
+    }
+
+    pub fn set_name_node(&mut self, host: &str) {
+        self.host = host.to_string();
+
+        unsafe {
+            hdfsBuilderSetNameNode(self.builder, to_raw!(host));
+        }
+    }
+
+    pub fn set_name_port(&mut self, port: u16) {
+        self.port = port;
+        unsafe {
+            hdfsBuilderSetNameNodePort(self.builder, port);
+        }
+    }
+    pub fn connect(self) -> Result<HdfsFs, Error> {
+        let hdfs_fs = unsafe { hdfsBuilderConnect(self.builder) };
+
+        if hdfs_fs.is_null() {
+            Err(Error::last_os_error())
+        } else {
+            let host_port = format!("{}:{}", self.host, self.port);
+            Ok(HdfsFs::new(host_port, hdfs_fs))
+        }
+    }
+}
+
+impl Drop for HdfsBuilder {
+    fn drop(&mut self) {
+        unsafe { hdfsFreeBuilder(self.builder) }
+    }
+}
+
+impl Default for HdfsBuilder {
+    fn default() -> Self {
+        Self::builder()
     }
 }
